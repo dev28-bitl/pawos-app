@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "android:device": "react-native run-android --no-packager",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
+    "check:no-figma-mcp": "node scripts/check-no-figma-mcp.js",
+    "lint": "npm run check:no-figma-mcp && eslint .",
     "start": "react-native start",
+    "start:reset": "react-native start --reset-cache",
     "test": "jest"
   },
   "dependencies": {
