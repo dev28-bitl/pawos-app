@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   Image,
   type ImageSourcePropType,
@@ -25,6 +25,7 @@ import SettingsNavIcon from './src/assets/icons/settings-nav.svg';
 import HomeNavIcon from './src/assets/icons/home-nav.svg';
 import HealthNavIcon from './src/assets/icons/health-nav.svg';
 import ActivityNavIcon from './src/assets/icons/activity-nav.svg';
+import RecordsNavIcon from './src/assets/icons/records-icon-nav.svg';
 import WeightIcon from './src/assets/icons/weight.svg';
 import PawIcon from './src/assets/icons/paw.svg';
 import AlertIcon from './src/assets/icons/alert.svg';
@@ -35,18 +36,21 @@ import PasswordIcon from './src/assets/icons/password.svg';
 import PasswordToggleEyeIcon from './src/assets/icons/password-toggle-eye.svg';
 import VerifyEmailIcon from './src/assets/icons/verify-email.svg';
 import LogoIcon from './src/assets/icons/logo.svg';
-// Newly added icons (PET-XXX feature assets — wired into ASSET/JSX as needed).
+// Newly added icons (PET-XXX feature assets Ã¢â‚¬â€ wired into ASSET/JSX as needed).
 import WalkIcon from './src/assets/icons/Walk.svg';
 import VetIcon from './src/assets/icons/Vet.svg';
 import PushNotificationIcon from './src/assets/icons/push-notification.svg';
 import NotificationsIcon from './src/assets/icons/notifications.svg';
-import HeartRateIcon from './src/assets/icons/heart-rate.svg';
+import HeartRateIcon from './src/assets/icons/heart.svg';
 import HealthAlertsIcon from './src/assets/icons/health-alerts.svg';
 import FeedIcon from './src/assets/icons/feed.svg';
 import CurrentVitalsIcon from './src/assets/icons/current-vitals.svg';
 import SmartCollarIcon from './src/assets/icons/smart-collar.svg';
 import LogIcon from './src/assets/icons/Log.svg';
 import PawosFinalLogoIcon from './src/assets/icons/Pawos final logo.svg';
+import CalendarIcon from './src/assets/icons/calendar.svg';
+import BackIcon from './src/assets/icons/back-icon.svg';
+import ForwardIcon from './src/assets/icons/forward-icon.svg';
 
 // Keep typography consistent across devices with large accessibility font scales.
 const textDefaultProps = (Text as unknown as { defaultProps?: { allowFontScaling?: boolean; maxFontSizeMultiplier?: number } }).defaultProps || {};
@@ -61,13 +65,15 @@ inputDefaultProps.maxFontSizeMultiplier = 1;
 
 const PLACEHOLDER = {
   splashLogo: require('./src/assets/placeholders/splash-logo.png'),
-  onboardingHealth: require('./src/assets/placeholders/onboarding-health.png'),
-  onboardingActivity: require('./src/assets/placeholders/onboarding-activity.png'),
+  onboardingHealth: require('./src/assets/placeholders/onboarding-health 1.png'),
+  onboardingActivity: require('./src/assets/placeholders/onboarding-activity 1.png'),
   authLogo: require('./src/assets/placeholders/auth-logo.png'),
-  authBanner: require('./src/assets/placeholders/auth-banner.png'),
+  authBanner: require('./src/assets/placeholders/login-page-bottom-right.png'),
+  loginTopDecor: require('./src/assets/placeholders/login-page-left-top.png'),
   otpHero: require('./src/assets/placeholders/otp-hero.png'),
-  profileAvatar: require('./src/assets/placeholders/profile-avatar.png'),
-  petPhoto: require('./src/assets/placeholders/pet-photo.png'),
+  // Real profile images for populated look
+  profileAvatar: require('./src/assets/placeholders/avatar-256 1.png'),
+  petPhoto: require('./src/assets/placeholders/profile-avatar 1.png'),
   icon: require('./src/assets/placeholders/icon-128.png'),
 } as const;
 
@@ -86,7 +92,7 @@ const ASSET = {
   loginLogo: PLACEHOLDER.authLogo,
   loginGoogle: PLACEHOLDER.icon,
   loginBg: PLACEHOLDER.authBanner,
-  loginTop: PLACEHOLDER.authBanner,
+  loginTop: PLACEHOLDER.loginTopDecor,
 
   otpHero: PLACEHOLDER.otpHero,
   otpLock: PLACEHOLDER.icon,
@@ -119,7 +125,7 @@ const ASSET = {
   navSettings: PLACEHOLDER.icon,
 } as const;
 
-type Screen = 'splash' | 'health' | 'activity' | 'login' | 'signup' | 'otp' | 'home' | 'profile' | 'edit-profile' | 'create-pet' | 'pet-profile' | 'edit-pet';
+type Screen = 'splash' | 'health' | 'activity' | 'login' | 'signup' | 'otp' | 'home' | 'records' | 'add-record' | 'record-detail' | 'profile' | 'edit-profile' | 'create-pet' | 'pet-profile' | 'edit-pet';
 
 export type PetGender = 'Male' | 'Female';
 export type PetSpecies = 'Dog' | 'Cat';
@@ -141,6 +147,69 @@ export const DEFAULT_PETS: Pet[] = [
   { id: 'p-luna', name: 'Luna', species: 'Cat', breed: 'Siamese', dateOfBirth: '2021-07-04', gender: 'Female', weight: '4.2', microchipNumber: '985112004567890', photo: '' },
   { id: 'p-max', name: 'Max', species: 'Dog', breed: 'Beagle', dateOfBirth: '2023-11-21', gender: 'Male', weight: '11.8', microchipNumber: '985112005678901', photo: '' },
 ];
+
+// REC-001: Health record types
+export type RecordType = 'Vaccination' | 'Medication' | 'Vet Visit' | 'Surgery' | 'Lab Result' | 'Other';
+
+export type HealthRecord = {
+  id: string;
+  petId: string;
+  type: RecordType;
+  title: string;
+  description: string;
+  recordDate: string; // ISO yyyy-mm-dd
+  vetName: string;
+  clinicName: string;
+  attachmentName?: string;
+  attachmentUri?: string;
+  createdAt: string; // ISO for sorting
+};
+
+// REC-002: Default sample health records
+export const DEFAULT_RECORDS: HealthRecord[] = [
+  {
+    id: 'r-1', petId: 'p-cooper', type: 'Vaccination',
+    title: 'Rabies Booster Shot', description: 'Annual rabies vaccination booster administered.',
+    recordDate: '2025-10-12', vetName: 'Dr. Sarah Mitchell', clinicName: 'Paw & Claw Veterinary Clinic',
+    createdAt: '2025-10-14T09:30:00Z',
+  },
+  {
+    id: 'r-2', petId: 'p-cooper', type: 'Vet Visit',
+    title: 'Annual Wellness Checkup', description: 'Complete physical examination, blood work panel, and dental check.',
+    recordDate: '2025-09-20', vetName: 'Dr. James Chen', clinicName: 'Happy Paws Animal Hospital',
+    createdAt: '2025-09-22T14:00:00Z',
+  },
+  {
+    id: 'r-3', petId: 'p-luna', type: 'Medication',
+    title: 'Flea & Tick Prevention', description: 'Monthly topical flea and tick prevention applied.',
+    recordDate: '2025-11-01', vetName: 'Dr. Emily Park', clinicName: 'City Vet Clinic',
+    attachmentName: 'prescription.pdf',
+    createdAt: '2025-11-02T10:15:00Z',
+  },
+  {
+    id: 'r-4', petId: 'p-cooper', type: 'Lab Result',
+    title: 'Blood Panel Results', description: 'Complete blood count and chemistry panel. All values within normal range.',
+    recordDate: '2025-08-15', vetName: 'Dr. Sarah Mitchell', clinicName: 'Paw & Claw Veterinary Clinic',
+    attachmentName: 'lab-results.pdf',
+    createdAt: '2025-08-17T16:45:00Z',
+  },
+  {
+    id: 'r-5', petId: 'p-max', type: 'Surgery',
+    title: 'Neuter Procedure', description: 'Routine neuter surgery performed successfully. Recovery uneventful.',
+    recordDate: '2024-06-10', vetName: 'Dr. Robert Kim', clinicName: 'Greenfield Vet Center',
+    createdAt: '2024-06-12T11:00:00Z',
+  },
+];
+
+// REC-003: Record type display config (color + icon label)
+export const RECORD_TYPE_CONFIG: Record<RecordType, { color: string; bgColor: string; icon: string }> = {
+  'Vaccination':     { color: '#1F8A44', bgColor: '#DDF1D2', icon: 'ðŸ’‰' },
+  'Medication':      { color: '#904D00', bgColor: '#FADBD8', icon: 'ðŸ’Š' },
+  'Vet Visit':       { color: '#1A78C1', bgColor: '#D1E5F3', icon: 'ðŸ¥' },
+  'Surgery':         { color: '#93000A', bgColor: '#FFDAD6', icon: 'ðŸ”ª' },
+  'Lab Result':      { color: '#6A53D7', bgColor: '#E6DEFF', icon: 'ðŸ§ª' },
+  'Other':           { color: '#564337', bgColor: '#E8E3E1', icon: 'ðŸ“‹' },
+};
 
 const ACCENT = ['#E67E22', '#D1E5F3', '#FADBD8', '#C8E6C9', '#E1D9FB', '#FFE0B2'] as const;
 
@@ -170,6 +239,10 @@ export default function App() {
   // PET-002/PET-004: pets live in app-level state so edits persist across screens.
   const [pets, setPets] = useState<Pet[]>(DEFAULT_PETS);
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
+  // REC-004: Health records state
+  const [records, setRecords] = useState<HealthRecord[]>(DEFAULT_RECORDS);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
 
   useEffect(() => {
     if (screen !== 'splash') return;
@@ -195,6 +268,27 @@ export default function App() {
     setScreen('profile');
   };
 
+  // REC-005: Record CRUD operations
+  const addRecord = (record: HealthRecord) => {
+    setRecords(prev => [record, ...prev]);
+    setEditingRecordId(null);
+    setScreen('records');
+  };
+  const updateRecord = (record: HealthRecord) => {
+    setRecords(prev => prev.map(r => (r.id === record.id ? record : r)));
+    setEditingRecordId(null);
+    setSelectedRecordId(record.id);
+    setScreen('record-detail');
+  };
+  const deleteRecord = (id: string) => {
+    setRecords(prev => prev.filter(r => r.id !== id));
+    setSelectedRecordId(null);
+    setScreen('records');
+  };
+
+  const selectedRecord = records.find(r => r.id === selectedRecordId) || null;
+  const editingRecord = records.find(r => r.id === editingRecordId) || null;
+
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF8F5" />
@@ -205,7 +299,7 @@ export default function App() {
         {screen === 'login' && <LoginScreen onSend={() => setScreen('otp')} onCreate={() => setScreen('signup')} />}
         {screen === 'signup' && <SignupScreen onCreate={() => setScreen('otp')} onLogin={() => setScreen('login')} />}
         {screen === 'otp' && <OtpScreen onBack={() => setScreen('login')} onVerify={() => setScreen('home')} />}
-        {screen === 'home' && <HomeScreen onProfile={() => setScreen('profile')} />}
+        {screen === 'home' && <HomeScreen onProfile={() => setScreen('profile')} onRecords={() => setScreen('records')} />}
         {screen === 'profile' && (
           <ProfileScreen
             onHome={() => setScreen('home')}
@@ -228,6 +322,33 @@ export default function App() {
         )}
         {screen === 'edit-pet' && selectedPet && (
           <EditPetScreen pet={selectedPet} onBack={() => setScreen('pet-profile')} onSave={updatePet} />
+        )}
+        {/* REC-006: Records screens */}
+        {screen === 'records' && (
+          <RecordsScreen
+            onHome={() => setScreen('home')}
+            onAddRecord={() => setScreen('add-record')}
+            records={records}
+            pets={pets}
+            onSelectRecord={(id) => { setSelectedRecordId(id); setScreen('record-detail'); }}
+          />
+        )}
+        {screen === 'add-record' && (
+          <AddRecordScreen
+            onBack={() => { setEditingRecordId(null); setScreen('records'); }}
+            pets={pets}
+            onCreate={editingRecord ? updateRecord : addRecord}
+            editing={editingRecord}
+          />
+        )}
+        {screen === 'record-detail' && selectedRecord && (
+          <RecordDetailScreen
+            record={selectedRecord}
+            pet={pets.find(p => p.id === selectedRecord.petId) || null}
+            onBack={() => setScreen('records')}
+            onEdit={() => { setEditingRecordId(selectedRecord.id); setScreen('add-record'); }}
+            onDelete={() => deleteRecord(selectedRecord.id)}
+          />
         )}
       </SafeAreaView>
     </SafeAreaProvider>
@@ -252,13 +373,13 @@ function SplashScreen() {
 function HealthScreen({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
   return (
     <View style={s.onbWrap}>
-      <View style={s.onbHead}><View style={s.roundBtn}><Image source={ASSET.healthBack} style={s.icon14} /></View><TouchableOpacity onPress={onSkip}><Text style={s.skip}>Skip</Text></TouchableOpacity></View>
+      <View style={s.onbHead}><TouchableOpacity style={s.roundBtn} onPress={onSkip}><BackIcon width={18} height={18} fill="#261810" /></TouchableOpacity><TouchableOpacity onPress={onSkip}><Text style={s.skip}>Skip</Text></TouchableOpacity></View>
       <View style={s.onbBody}>
         <View style={s.card320}><Image source={ASSET.healthIllus} style={s.fillImg} /><View style={s.badge}><Image source={ASSET.healthBadge} style={s.icon12} /><Text style={s.badgeTxt}>Healthy</Text></View></View>
         <Text style={s.title}>Comprehensive Health{`\n`}Tracking</Text>
         <Text style={s.sub}>Keep all your pet&apos;s medical records,{`\n`}vaccinations, and vet appointments in{`\n`}one secure place.</Text>
       </View>
-      <View style={s.onbFoot}><View style={s.row}><View style={s.indActiveDark} /><View style={s.indDotDark} /><View style={s.indDotDark} /></View><TouchableOpacity onPress={onNext}><View style={s.nextRingDark}><View style={s.nextCoreDark}><Image source={ASSET.healthNext} style={s.icon18} /></View></View></TouchableOpacity></View>
+      <View style={s.onbFoot}><View style={s.row}><View style={s.indActiveDark} /><View style={s.indDotDark} /><View style={s.indDotDark} /></View><TouchableOpacity onPress={onNext}><View style={s.nextRingDark}><View style={s.nextCoreDark}><ForwardIcon width={20} height={20} fill="#fff" /></View></View></TouchableOpacity></View>
     </View>
   );
 }
@@ -266,7 +387,7 @@ function HealthScreen({ onNext, onSkip }: { onNext: () => void; onSkip: () => vo
 function ActivityScreen({ onBack, onNext, onSkip }: { onBack: () => void; onNext: () => void; onSkip: () => void }) {
   return (
     <View style={s.onbWrap}>
-      <View style={s.onbHead}><TouchableOpacity style={s.roundBtnSm} onPress={onBack}><Image source={ASSET.actBack} style={s.icon14} /></TouchableOpacity><TouchableOpacity onPress={onSkip}><Text style={s.skip}>Skip</Text></TouchableOpacity></View>
+      <View style={s.onbHead}><TouchableOpacity style={s.roundBtnSm} onPress={onBack}><BackIcon width={18} height={18} fill="#261810" /></TouchableOpacity><TouchableOpacity onPress={onSkip}><Text style={s.skip}>Skip</Text></TouchableOpacity></View>
       <View style={s.onbBody}>
         <View style={s.activityWrap}>
           <View style={s.chip}><View style={s.chipIconWrap}><Image source={ASSET.actChip} style={s.chipIcon} /></View><View><Text style={s.chipLbl}>Live Location</Text><Text style={s.chipVal}>Sunny Park</Text></View></View>
@@ -275,7 +396,7 @@ function ActivityScreen({ onBack, onNext, onSkip }: { onBack: () => void; onNext
         <Text style={s.title}>Monitor Every Step</Text>
         <Text style={s.sub}>Track daily activity levels and GPS{`\n`}location in real-time with our integrated{`\n`}Smart Collar technology.</Text>
       </View>
-      <View style={s.onbFoot}><View style={s.row}><View style={s.indDotLight} /><View style={s.indActiveLight} /><View style={s.indDotLight} /></View><TouchableOpacity onPress={onNext}><View style={s.nextRingLight}><View style={s.nextCoreLight}><Image source={ASSET.actNext} style={s.icon18} /></View></View></TouchableOpacity></View>
+      <View style={s.onbFoot}><View style={s.row}><View style={s.indDotLight} /><View style={s.indActiveLight} /><View style={s.indDotLight} /></View><TouchableOpacity onPress={onNext}><View style={s.nextRingLight}><View style={s.nextCoreLight}><ForwardIcon width={20} height={20} fill="#fff" /></View></View></TouchableOpacity></View>
     </View>
   );
 }
@@ -380,31 +501,43 @@ function LabeledInput({
 function OtpScreen({ onBack, onVerify }: { onBack: () => void; onVerify: () => void }) {
   return (
     <View style={s.otpWrap}>
-      <View style={s.otpTop}><TouchableOpacity style={s.otpBack} onPress={onBack}><Image source={ASSET.otpBack} style={s.icon14} /></TouchableOpacity><Text style={s.otpBrand}>Pawos</Text><View style={s.blank} /></View>
-      <View style={s.otpCard}><View style={[s.otpHero, { alignItems: 'center', justifyContent: 'center' }]}><VerifyEmailIcon width={128} height={96} /></View><Text style={s.otpTitle}>Verify your email</Text><Text style={s.otpSub}>We&apos;ve sent a code to your email. Enter{`\n`}the 4-digit numeric code below to{`\n`}proceed.</Text><View style={s.otpRow}><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /></View><TouchableOpacity style={s.otpVerifyBtn} onPress={onVerify}><Text style={s.otpVerifyTxt}>Verify</Text></TouchableOpacity><Text style={s.otpHint}>Didn&apos;t receive the code?</Text><View style={s.row}><Text style={s.otpResend}>Resend code</Text><View style={s.otpDot} /><Text style={s.otpTime}>0:30s</Text></View></View>
+      <View style={s.otpTop}><TouchableOpacity style={s.otpBack} onPress={onBack}><BackIcon width={18} height={18} fill="#261810" /></TouchableOpacity><Text style={s.otpBrand}>Pawos</Text><View style={s.blank} /></View>
+      <View style={s.otpCard}><View style={[s.otpHero, { alignItems: 'center', justifyContent: 'center' }]}><View style={s.otpIconContainer}><VerifyEmailIcon width={42} height={36} /></View></View><Text style={s.otpTitle}>Verify your email</Text><Text style={s.otpSub}>We&apos;ve sent a code to your email. Enter{`\n`}the 4-digit numeric code below to{`\n`}proceed.</Text><View style={s.otpRow}><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /></View><TouchableOpacity style={s.otpVerifyBtn} onPress={onVerify}><Text style={s.otpVerifyTxt}>Verify</Text></TouchableOpacity><Text style={s.otpHint}>Didn&apos;t receive the code?</Text><View style={s.row}><Text style={s.otpResend}>Resend code</Text><View style={s.otpDot} /><Text style={s.otpTime}>0:30s</Text></View></View>
       <View style={s.secure}><Image source={ASSET.otpLock} style={s.lock} /><Text style={s.secureTxt}>Secure 256-bit encrypted verification</Text></View>
     </View>
   );
 }
 
-function HomeScreen({ onProfile }: { onProfile: () => void }) {
+function HomeScreen({ onProfile, onRecords }: { onProfile: () => void; onRecords: () => void }) {
   return (
     <View style={s.homeWrap}>
+      {/* Figma: Two large decorative blur circles in Hero Section */}
       <View style={s.homeTopGlow} />
+      <View style={s.homeBottomGlow} />
+      <View style={s.homeHeader}>
+        <TouchableOpacity onPress={onProfile} style={s.homeUserBtn}>
+          <Image source={ASSET.profileTopAvatar} style={s.homeUserAvatar} />
+        </TouchableOpacity>
+        <LogoIcon width={111} height={48} />
+        <TouchableOpacity style={s.homeBellBtn}>
+          <BellsIcon width={19} height={24} fill="#944A00" />
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={s.homeContent} showsVerticalScrollIndicator={false}>
-        <View style={s.homeHeader}>
-          <TouchableOpacity onPress={onProfile} style={s.homeUserBtn}>
-            <Image source={ASSET.profileTopAvatar} style={s.homeUserAvatar} />
-          </TouchableOpacity>
-          <Text style={s.homeBrand}>Pawos</Text>
-          <View style={s.homeBellWrap}><BellsIcon width={18} height={18} fill="#4F3D31" /></View>
-        </View>
 
+        {/* Pet Profile Card â€” Figma: Overlay+Border+Shadow+OverlayBlur */}
         <View style={s.homePetCard}>
-          <Image source={ASSET.petCooper} style={s.homePetImg} />
+          {/* Avatar with shadow container + status badge overlay */}
+          <View style={s.homePetImgWrap}>
+            <Image source={ASSET.petCooper} style={s.homePetImg} />
+            {/* Status badge at bottom-right of avatar */}
+            <View style={s.homePetStatusBadge}>
+              <PawIcon width={10} height={8} fill="#fff" />
+            </View>
+          </View>
           <View style={s.homePetBody}>
             <View style={s.row}><Text style={s.homePetName}>Cooper</Text><Text style={s.homeActive}>ACTIVE</Text></View>
-            <View style={s.homeHealthPill}><PremiumStarIcon width={12} height={12} fill="#9D620F" /><Text style={s.homeHealthTxt}>Excellent Health</Text></View>
+            <View style={s.homeHealthPill}><PremiumStarIcon width={14} height={14} fill="#9D620F" /><Text style={s.homeHealthTxt}>Excellent Health</Text></View>
           </View>
         </View>
 
@@ -432,31 +565,99 @@ function HomeScreen({ onProfile }: { onProfile: () => void }) {
         </View>
 
         <View style={s.homeRateCard}>
-          <View style={s.row}>
-            <HeartRateIcon width={20} height={20} fill="#E74C3C" />
-            <View>
-              <Text style={s.homeRateTitle}>Heart Rate</Text>
-              <Text style={s.homeRateValue}>72 <Text style={s.homeVitalUnit}>bpm</Text></Text>
+          <View style={s.homeRateLeft}>
+            <Text style={s.homeRateTitle}>Heart Rate</Text>
+            <View style={s.homeRateValueRow}>
+              <Text style={s.homeRateValue}>72</Text>
+              <View style={s.homeRateUnitWrap}>
+                <Text style={s.homeRateUnit}>bpm</Text>
+                <HeartRateIcon width={20} height={18} fill="#BA1A1A" />
+              </View>
             </View>
           </View>
-          <Text style={s.homeRateBars}>| | | | |</Text>
+          <View style={s.homeRateBars}>
+            {([
+              { h: 24, o: 0.2 },
+              { h: 40, o: 0.4 },
+              { h: 48, o: 1.0 },
+              { h: 32, o: 0.6 },
+              { h: 40, o: 0.3 },
+              { h: 44, o: 0.7 },
+              { h: 28, o: 0.5 },
+            ]).map((b, i) => (
+              <View key={i} style={[s.homeRateBar, { height: b.h, backgroundColor: 'rgba(255,140,0,' + b.o + ')' }]} />
+            ))}
+          </View>
         </View>
 
         <View style={s.homeSectionHead}>
           <Text style={s.homeSectionTitle}>Upcoming Care</Text>
           <Text style={s.homeViewAll}>View All</Text>
         </View>
-        <View style={s.homeCareCard}>
-          <View style={s.homeDays}><Text style={s.homeDaysTxt}>5{`\n`}DAYS</Text></View>
-          <View style={s.homeCareBody}><Text style={s.homeCareTitle}>Rabies Booster</Text><Text style={s.homeCareSub}>Urgent · Due Oct 12</Text></View>
-          <TouchableOpacity style={s.homeBookBtn}><Text style={s.homeBookTxt}>Book</Text></TouchableOpacity>
+        <View style={s.homeCareList}>
+          <View style={s.homeCareCard}>
+            <View style={s.homeDays}>
+              <Text style={s.homeDaysNum}>5</Text>
+              <Text style={s.homeDaysLbl}>DAYS</Text>
+            </View>
+            <View style={s.homeCareBody}>
+              <Text style={s.homeCareTitle}>Rabies Booster</Text>
+              <Text style={s.homeCareSub}>Urgent Ã¢â‚¬Â¢ Due Oct 12</Text>
+            </View>
+            <TouchableOpacity style={s.homeBookBtn}><Text style={s.homeBookTxt}>Book</Text></TouchableOpacity>
+          </View>
+          <View style={[s.homeCareCard, s.homeCareCardAlt]}>
+            <View style={[s.homeDays, s.homeDaysAlt]}>
+              <CalendarIcon width={18} height={20} fill="#897362" />
+            </View>
+            <View style={s.homeCareBody}>
+              <Text style={s.homeCareTitle}>Annual Checkup</Text>
+              <Text style={s.homeCareSub}>Oct 24, 2023</Text>
+            </View>
+          </View>
         </View>
 
         <Text style={s.homeSectionTitle}>Recent Activity</Text>
-        <View style={s.homeRecentCard}>
-          <View style={s.homeRecentIcon}><WalkIcon width={16} height={16} fill="#8A7264" /></View>
-          <View style={s.homeRecentBody}><Text style={s.homeCareTitle}>Morning Walk</Text><Text style={s.homeCareSub}>08:50 AM · 45 mins</Text></View>
-          <Text style={s.homeDistance}>2.4 km</Text>
+        <View style={s.homeTimeline}>
+          <View style={s.homeTimelineItem}>
+            <View style={s.homeTimelineRail}>
+              <View style={s.homeTimelineDot}><View style={s.homeTimelineDotInner} /></View>
+              <View style={s.homeTimelineLine} />
+            </View>
+            <View style={[s.homeRecentCard, s.homeRecentCardWalk]}>
+              <View style={s.homeRecentWalkHead}>
+                <View style={s.homeRecentWalkLeft}>
+                  <View style={s.homeRecentIconWalk}><WalkIcon width={11} height={18} fill="#5E39E0" /></View>
+                  <View>
+                    <Text style={s.homeCareTitle}>Morning Walk</Text>
+                    <Text style={s.homeRecentSubAlt}>08:30 AM Ã¢â‚¬Â¢ 45 mins</Text>
+                  </View>
+                </View>
+                <Text style={s.homeDistance}>2.4 km</Text>
+              </View>
+              <View style={s.homeWalkMap}>
+                <View style={s.homeWalkMapPill}><WalkIcon width={8} height={10} fill="#5E39E0" /><Text style={s.homeWalkMapPillTxt}>Park Loop Path</Text></View>
+              </View>
+            </View>
+          </View>
+
+          <View style={s.homeTimelineItem}>
+            <View style={s.homeTimelineRail}>
+              <View style={s.homeTimelineDot} />
+            </View>
+            <View style={s.homeRecentCard}>
+              <View style={s.homeRecentWalkHead}>
+                <View style={s.homeRecentWalkLeft}>
+                  <View style={s.homeRecentIconFeed}><FeedIcon width={13} height={17} fill="#904D00" /></View>
+                  <View>
+                    <Text style={s.homeCareTitle}>Breakfast</Text>
+                    <Text style={s.homeRecentSubAlt}>07:15 AM Ã¢â‚¬Â¢ 250g Kibble</Text>
+                  </View>
+                </View>
+                <View style={s.homeFeedPill}><Text style={s.homeFeedPillTxt}>Salmon</Text></View>
+              </View>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
@@ -467,6 +668,10 @@ function HomeScreen({ onProfile }: { onProfile: () => void }) {
         </View>
         <NavItem label="Health" iconComponent={HealthNavIcon} />
         <NavItem label="Activity" iconComponent={ActivityNavIcon} />
+        <TouchableOpacity style={s.navItem} onPress={onRecords}>
+          <View style={s.navIconWrap}><PawIcon width={20} height={20} color="#644B3C" /></View>
+          <Text style={s.navTxt}>Records</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={s.navItem} onPress={onProfile}>
           <View style={s.navIconWrap}><SettingsNavIcon color="#644B3C" /></View>
           <Text style={s.navTxt}>Settings</Text>
@@ -752,9 +957,8 @@ function AppIcon({ name, size = 18, color = '#644B3C' }: { name: string; size?: 
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Edit Profile screen
-// ─────────────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function EditProfileScreen({ onBack }: { onBack: () => void }) {
   return (
     <ScrollView contentContainerStyle={s.editProfileWrap}>
@@ -775,7 +979,7 @@ function EditProfileScreen({ onBack }: { onBack: () => void }) {
         <LabeledInput label="Phone Number" placeholder="+1 (555) 123-4567" iconComponent={FullNameIcon} keyboardType="number-pad" />
         <View style={s.editDivider} />
         <Text style={s.editSectionLbl}>Security</Text>
-        <LabeledInput label="Password" placeholder="••••••••" iconComponent={ShieldIcon} secure />
+        <LabeledInput label="Password" placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢" iconComponent={ShieldIcon} secure />
       </View>
       <TouchableOpacity style={s.editDeleteBtn} onPress={onBack}>
         <DeleteAccountIcon width={16} height={16} />
@@ -847,12 +1051,12 @@ function PetForm({
           {step === 'Register' && (
             <View style={s.petReviewCard}>
               <Text style={s.petReviewLbl}>Review</Text>
-              <PetReviewRow label="Name" value={value.name || '—'} />
+              <PetReviewRow label="Name" value={value.name || 'Ã¢â‚¬â€'} />
               <PetReviewRow label="Species" value={value.species} />
-              <PetReviewRow label="Breed" value={value.breed || '—'} />
-              <PetReviewRow label="Date of Birth" value={value.dateOfBirth || '—'} />
+              <PetReviewRow label="Breed" value={value.breed || 'Ã¢â‚¬â€'} />
+              <PetReviewRow label="Date of Birth" value={value.dateOfBirth || 'Ã¢â‚¬â€'} />
               <PetReviewRow label="Gender" value={value.gender} />
-              <PetReviewRow label="Weight" value={value.weight ? `${value.weight} kg` : '—'} last />
+              <PetReviewRow label="Weight" value={value.weight ? `${value.weight} kg` : 'Ã¢â‚¬â€'} last />
             </View>
           )}
         </>
@@ -904,7 +1108,7 @@ function PetStepIndicator({ step }: { step: number }) {
         return (
           <View key={label} style={s.petStepItem}>
             <View style={[s.petStepCircle, active && s.petStepCircleActive, completed && s.petStepCircleDone]}>
-              <Text style={[s.petStepNum, (active || completed) && s.petStepNumActive]}>{completed ? '✓' : idx}</Text>
+              <Text style={[s.petStepNum, (active || completed) && s.petStepNumActive]}>{completed ? 'Ã¢Å“â€œ' : idx}</Text>
             </View>
             <Text style={[s.petStepLbl, (active || completed) && s.petStepLblActive]}>{label}</Text>
             {i < PET_STEPS.length - 1 && <View style={[s.petStepLine, completed && s.petStepLineDone]} />}
@@ -915,7 +1119,7 @@ function PetStepIndicator({ step }: { step: number }) {
   );
 }
 
-// PET-001: Create Pet screen — 3-step wizard (Pet → About → Register)
+// PET-001: Create Pet screen Ã¢â‚¬â€ 3-step wizard (Pet Ã¢â€ â€™ About Ã¢â€ â€™ Register)
 function CreatePetScreen({ onBack, onCreate }: { onBack: () => void; onCreate: (pet: Pet) => void }) {
   const [draft, setDraft] = useState<Pet>({
     id: `p-${Date.now()}`,
@@ -988,7 +1192,7 @@ function CreatePetScreen({ onBack, onCreate }: { onBack: () => void; onCreate: (
   );
 }
 
-// PET-002: Edit Pet screen — all fields editable, persists on save
+// PET-002: Edit Pet screen Ã¢â‚¬â€ all fields editable, persists on save
 function EditPetScreen({ pet, onBack, onSave }: { pet: Pet; onBack: () => void; onSave: (pet: Pet) => void }) {
   const [draft, setDraft] = useState<Pet>(pet);
   const dirty = JSON.stringify(draft) !== JSON.stringify(pet);
@@ -1058,9 +1262,9 @@ function PetProfileScreen({
 
           <View style={s.petFactsCard}>
             <PetFact label="Gender" value={pet.gender} />
-            <PetFact label="Date of Birth" value={pet.dateOfBirth || '—'} border />
-            <PetFact label="Weight" value={pet.weight ? `${pet.weight} kg` : '—'} border />
-            <PetFact label="Microchip" value={pet.microchipNumber || '—'} border />
+            <PetFact label="Date of Birth" value={pet.dateOfBirth || 'Ã¢â‚¬â€'} border />
+            <PetFact label="Weight" value={pet.weight ? `${pet.weight} kg` : 'Ã¢â‚¬â€'} border />
+            <PetFact label="Microchip" value={pet.microchipNumber || 'Ã¢â‚¬â€'} border />
           </View>
 
           <TouchableOpacity style={s.petEditBtn} onPress={onEdit}>
@@ -1106,6 +1310,394 @@ function PetFact({ label, value, border }: { label: string; value: string; borde
   );
 }
 
+
+// REC-006: Records list screen â€” search, filter chips, record cards, floating add button
+function RecordsScreen({
+  onHome,
+  onAddRecord,
+  records,
+  pets,
+  onSelectRecord,
+}: {
+  onHome: () => void;
+  onAddRecord: () => void;
+  records: HealthRecord[];
+  pets: Pet[];
+  onSelectRecord: (id: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [activeType, setActiveType] = useState<RecordType | 'All'>('All');
+
+  const filtered = records.filter(r => {
+    const matchesType = activeType === 'All' || r.type === activeType;
+    const q = query.trim().toLowerCase();
+    const matchesQuery =
+      !q ||
+      r.title.toLowerCase().includes(q) ||
+      r.vetName.toLowerCase().includes(q) ||
+      r.clinicName.toLowerCase().includes(q) ||
+      r.description.toLowerCase().includes(q);
+    return matchesType && matchesQuery;
+  });
+
+  const petName = (petId: string) => pets.find(p => p.id === petId)?.name ?? 'Unknown Pet';
+
+  const chipTypes: (RecordType | 'All')[] = ['All', 'Vaccination', 'Medication', 'Vet Visit', 'Surgery', 'Lab Result', 'Other'];
+
+  return (
+    <View style={s.recWrap}>
+      <View style={s.homeTopGlow} />
+      <View style={s.homeBottomGlow} />
+      <View style={s.recHeader}>
+        <TouchableOpacity style={s.otpBack} onPress={onHome}><BackButtonIcon width={16} height={16} /></TouchableOpacity>
+        <Text style={s.recTitle}>Health Records</Text>
+        <View style={s.blank} />
+      </View>
+
+      <View style={s.recSearchWrap}>
+        <View style={s.recSearchBox}>
+          <PawIcon width={16} height={16} color="#944A00" />
+          <TextInput
+            style={s.recSearchInput}
+            placeholder="Search records, vets, clinics..."
+            placeholderTextColor="#897365"
+            value={query}
+            onChangeText={setQuery}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery('')} hitSlop={12}>
+              <Text style={s.recClearTxt}>âœ•</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.recChips}>
+        {chipTypes.map(t => {
+          const active = activeType === t;
+          const cfg = t === 'All' ? null : RECORD_TYPE_CONFIG[t];
+          return (
+            <TouchableOpacity
+              key={t}
+              style={[s.recChip, active ? s.recChipActive : null]}
+              onPress={() => setActiveType(t)}
+            >
+              <Text style={[s.recChipTxt, active ? s.recChipTxtActive : null]}>
+                {cfg ? `${cfg.icon} ${t}` : 'All'}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      <Text style={s.recCountTxt}>{filtered.length} record{filtered.length === 1 ? '' : 's'}</Text>
+
+      <ScrollView contentContainerStyle={s.recList} showsVerticalScrollIndicator={false}>
+        {filtered.length === 0 ? (
+          <View style={s.recEmpty}>
+            <PawIcon width={48} height={48} color="#DCC1B1" />
+            <Text style={s.recEmptyTitle}>No records found</Text>
+            <Text style={s.recEmptySub}>
+              {query || activeType !== 'All'
+                ? 'Try adjusting your search or filters.'
+                : 'Add your first health record to get started.'}
+            </Text>
+          </View>
+        ) : (
+          filtered.map(r => {
+            const cfg = RECORD_TYPE_CONFIG[r.type];
+            return (
+              <TouchableOpacity
+                key={r.id}
+                style={s.recCard}
+                activeOpacity={0.85}
+                onPress={() => onSelectRecord(r.id)}
+              >
+                <View style={[s.recCardIcon, { backgroundColor: cfg.bgColor }]}>
+                  <Text style={s.recCardIconTxt}>{cfg.icon}</Text>
+                </View>
+                <View style={s.recCardBody}>
+                  <View style={s.recCardTop}>
+                    <Text style={s.recCardTitle} numberOfLines={1}>{r.title}</Text>
+                    <Text style={[s.recCardPill, { backgroundColor: cfg.bgColor, color: cfg.color }]}>{r.type}</Text>
+                  </View>
+                  <Text style={s.recCardPet} numberOfLines={1}>{petName(r.petId)} â€¢ {formatRecordDate(r.recordDate)}</Text>
+                  {r.vetName ? (
+                    <Text style={s.recCardVet} numberOfLines={1}>{r.vetName}{r.clinicName ? ` â€¢ ${r.clinicName}` : ''}</Text>
+                  ) : null}
+                  {r.attachmentName ? (
+                    <View style={s.recAttachRow}>
+                      <Text style={s.recAttachTxt}>ðŸ“Ž {r.attachmentName}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        )}
+      </ScrollView>
+
+      <TouchableOpacity style={s.recFab} onPress={onAddRecord} activeOpacity={0.9}>
+        <Text style={s.recFabTxt}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// REC-002: Add record form â€” type, title, description, date, vet, clinic, attachment
+function AddRecordScreen({
+  onBack,
+  pets,
+  onCreate,
+  editing,
+}: {
+  onBack: () => void;
+  pets: Pet[];
+  onCreate: (record: HealthRecord) => void;
+  editing?: HealthRecord | null;
+}) {
+  const [type, setType] = useState<RecordType>(editing?.type ?? 'Vaccination');
+  const [title, setTitle] = useState(editing?.title ?? '');
+  const [description, setDescription] = useState(editing?.description ?? '');
+  const [recordDate, setRecordDate] = useState(editing?.recordDate ?? new Date().toISOString().slice(0, 10));
+  const [vetName, setVetName] = useState(editing?.vetName ?? '');
+  const [clinicName, setClinicName] = useState(editing?.clinicName ?? '');
+  const [petId, setPetId] = useState(editing?.petId ?? pets[0]?.id ?? '');
+  const [attachmentName, setAttachmentName] = useState(editing?.attachmentName ?? '');
+
+  const valid = title.trim().length > 0 && petId.length > 0;
+
+  const handleAttach = () => {
+    // Stub file picker â€” in a real app this would launch a document picker.
+    setAttachmentName('vaccination_certificate.pdf');
+  };
+
+  const handleSave = () => {
+    if (!valid) return;
+    const record: HealthRecord = {
+      id: editing?.id ?? `rec_${Date.now()}`,
+      petId,
+      type,
+      title: title.trim(),
+      description: description.trim(),
+      recordDate,
+      vetName: vetName.trim(),
+      clinicName: clinicName.trim(),
+      attachmentName: attachmentName || undefined,
+      createdAt: editing?.createdAt ?? new Date().toISOString(),
+    };
+    onCreate(record);
+  };
+
+  const types: RecordType[] = ['Vaccination', 'Medication', 'Vet Visit', 'Surgery', 'Lab Result', 'Other'];
+
+  return (
+    <ScrollView contentContainerStyle={s.recFormWrap} showsVerticalScrollIndicator={false}>
+      <View style={s.recHeader}>
+        <TouchableOpacity style={s.otpBack} onPress={onBack}><BackButtonIcon width={16} height={16} /></TouchableOpacity>
+        <Text style={s.recTitle}>{editing ? 'Edit Record' : 'Add Record'}</Text>
+        <TouchableOpacity onPress={handleSave} disabled={!valid} hitSlop={12}>
+          <Text style={[s.editSaveTxt, !valid && s.editSaveDisabled]}>Save</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={s.recFieldLbl}>Record Type</Text>
+      <View style={s.recTypeGrid}>
+        {types.map(t => {
+          const cfg = RECORD_TYPE_CONFIG[t];
+          const active = type === t;
+          return (
+            <TouchableOpacity
+              key={t}
+              style={[s.recTypeChip, active ? { backgroundColor: cfg.bgColor, borderColor: cfg.color } : null]}
+              onPress={() => setType(t)}
+            >
+              <Text style={s.recTypeChipIcon}>{cfg.icon}</Text>
+              <Text style={[s.recTypeChipTxt, active ? { color: cfg.color } : null]}>{t}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={s.recFieldLbl}>Pet</Text>
+      <View style={s.recPetPicker}>
+        {pets.map(p => {
+          const active = petId === p.id;
+          return (
+            <TouchableOpacity
+              key={p.id}
+              style={[s.recPetChip, active ? s.recPetChipActive : null]}
+              onPress={() => setPetId(p.id)}
+            >
+              <Text style={[s.recPetChipTxt, active ? s.recPetChipTxtActive : null]}>{p.name}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={s.recFieldLbl}>Title</Text>
+      <TextInput
+        style={s.recInput}
+        placeholder="e.g. Annual Rabies Vaccination"
+        placeholderTextColor="#897365"
+        value={title}
+        onChangeText={setTitle}
+      />
+
+      <Text style={s.recFieldLbl}>Date</Text>
+      <TextInput
+        style={s.recInput}
+        placeholder="YYYY-MM-DD"
+        placeholderTextColor="#897365"
+        value={recordDate}
+        onChangeText={setRecordDate}
+      />
+
+      <Text style={s.recFieldLbl}>Description</Text>
+      <TextInput
+        style={[s.recInput, s.recInputMulti]}
+        placeholder="Notes, dosage, next due date..."
+        placeholderTextColor="#897365"
+        value={description}
+        onChangeText={setDescription}
+        multiline
+        numberOfLines={4}
+        textAlignVertical="top"
+      />
+
+      <Text style={s.recFieldLbl}>Veterinarian</Text>
+      <TextInput
+        style={s.recInput}
+        placeholder="Dr. name"
+        placeholderTextColor="#897365"
+        value={vetName}
+        onChangeText={setVetName}
+      />
+
+      <Text style={s.recFieldLbl}>Clinic</Text>
+      <TextInput
+        style={s.recInput}
+        placeholder="Clinic / hospital name"
+        placeholderTextColor="#897365"
+        value={clinicName}
+        onChangeText={setClinicName}
+      />
+
+      <Text style={s.recFieldLbl}>Attachment</Text>
+      <TouchableOpacity style={s.recAttachBtn} onPress={handleAttach}>
+        <Text style={s.recAttachBtnTxt}>
+          {attachmentName ? `ðŸ“Ž ${attachmentName}` : '+ Attach file (PDF, image)'}
+        </Text>
+      </TouchableOpacity>
+      {attachmentName ? (
+        <TouchableOpacity onPress={() => setAttachmentName('')} hitSlop={12}>
+          <Text style={s.recRemoveAttachTxt}>Remove attachment</Text>
+        </TouchableOpacity>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+// REC-003: Record detail view â€” full record + edit/delete actions
+function RecordDetailScreen({
+  record,
+  pet,
+  onBack,
+  onEdit,
+  onDelete,
+}: {
+  record: HealthRecord;
+  pet: Pet | null;
+  onBack: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const cfg = RECORD_TYPE_CONFIG[record.type];
+
+  return (
+    <ScrollView contentContainerStyle={s.recDetailWrap} showsVerticalScrollIndicator={false}>
+      <View style={s.recHeader}>
+        <TouchableOpacity style={s.otpBack} onPress={onBack}><BackButtonIcon width={16} height={16} /></TouchableOpacity>
+        <Text style={s.recTitle}>Record</Text>
+        <TouchableOpacity onPress={onEdit} hitSlop={12}>
+          <Text style={s.editSaveTxt}>Edit</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[s.recDetailHero, { backgroundColor: cfg.bgColor }]}>
+        <View style={s.recDetailHeroInner}>
+          <Text style={s.recDetailIcon}>{cfg.icon}</Text>
+          <Text style={[s.recDetailType, { color: cfg.color }]}>{record.type}</Text>
+        </View>
+        <Text style={s.recDetailTitle}>{record.title}</Text>
+        <Text style={s.recDetailDate}>{formatRecordDate(record.recordDate)}</Text>
+      </View>
+
+      <View style={s.recDetailSection}>
+        <Text style={s.recDetailLbl}>Pet</Text>
+        <Text style={s.recDetailVal}>{pet?.name ?? 'Unknown'}</Text>
+      </View>
+
+      {record.description ? (
+        <View style={s.recDetailSection}>
+          <Text style={s.recDetailLbl}>Description</Text>
+          <Text style={s.recDetailDesc}>{record.description}</Text>
+        </View>
+      ) : null}
+
+      <View style={s.recDetailRowCard}>
+        <View style={s.recDetailRow}>
+          <Text style={s.recDetailLbl}>Veterinarian</Text>
+          <Text style={s.recDetailVal}>{record.vetName || 'â€”'}</Text>
+        </View>
+        <View style={[s.recDetailRow, s.recDetailRowBorder]}>
+          <Text style={s.recDetailLbl}>Clinic</Text>
+          <Text style={s.recDetailVal}>{record.clinicName || 'â€”'}</Text>
+        </View>
+      </View>
+
+      {record.attachmentName ? (
+        <View style={s.recDetailSection}>
+          <Text style={s.recDetailLbl}>Attachment</Text>
+          <View style={s.recDetailAttachCard}>
+            <Text style={s.recDetailAttachTxt}>ðŸ“Ž {record.attachmentName}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      {confirming ? (
+        <View style={s.petConfirmCard}>
+          <View style={s.row}>
+            <AlertIcon width={20} height={20} />
+            <Text style={s.petConfirmTitle}>Delete this record?</Text>
+          </View>
+          <Text style={s.petConfirmSub}>This action cannot be undone.</Text>
+          <View style={s.petConfirmActions}>
+            <TouchableOpacity style={s.petConfirmCancel} onPress={() => setConfirming(false)}>
+              <Text style={s.petConfirmCancelTxt}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.petConfirmDelete} onPress={onDelete}>
+              <Text style={s.petConfirmDeleteTxt}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <TouchableOpacity style={s.recDetailDelete} onPress={() => setConfirming(true)}>
+          <Text style={s.recDetailDeleteTxt}>Delete Record</Text>
+        </TouchableOpacity>
+      )}
+    </ScrollView>
+  );
+}
+
+// Helper: human-readable record date
+function formatRecordDate(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FFF8F5' },
   fill: { flex: 1 },
@@ -1130,7 +1722,7 @@ const s = StyleSheet.create({
   roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF1EA', alignItems: 'center', justifyContent: 'center' },
   roundBtnSm: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#FEE3D5', alignItems: 'center', justifyContent: 'center' },
   skip: { color: '#564337', fontSize: 14, fontWeight: '600' },
-  card320: { width: '100%', maxWidth: 320, height: 320, borderRadius: 40, backgroundColor: '#fff', padding: 16, overflow: 'hidden', marginBottom: 20 },
+  card320: { width: '100%', maxWidth: 320, height: 320, borderRadius: 40, backgroundColor: '#fff', padding: 16, overflow: 'hidden', marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   fillImg: { width: '100%', height: '100%', borderRadius: 32 },
   badge: { position: 'absolute', top: 16, right: 16, borderRadius: 999, backgroundColor: '#E67E22', paddingHorizontal: 12, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   badgeTxt: { color: '#502600', fontSize: 12 },
@@ -1159,6 +1751,9 @@ const s = StyleSheet.create({
   chipLbl: { color: '#564337', fontSize: 12 },
   chipVal: { color: '#944A00', fontSize: 14, fontWeight: '600' },
 
+  // Unified card shadow: 0 4px 20px 0 rgba(0,0,0,0.05)
+  cardShadow: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+
   authWrap: { paddingHorizontal: 20, paddingTop: 32, paddingBottom: 24 },
   authTop: { alignItems: 'center' },
   topDecor: { position: 'absolute', left: -40, top: -40, width: 160, height: 180 },
@@ -1166,7 +1761,7 @@ const s = StyleSheet.create({
   authLogoSm: { width: 111, height: 48, marginBottom: 16 },
   authTitle: { color: '#261810', fontSize: 28, lineHeight: 36, fontWeight: '700', marginBottom: 4, textAlign: 'center' },
   authSub: { color: '#564337', fontSize: 16, lineHeight: 24, textAlign: 'center', marginBottom: 24 },
-  authCard: { backgroundColor: '#fff', borderRadius: 24, padding: 24 },
+  authCard: { backgroundColor: '#fff', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   googleBtn: { height: 56, borderRadius: 16, borderWidth: 2, borderColor: '#DCC1B1', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 24 },
   googleTxt: { color: '#564337', fontSize: 14, fontWeight: '600' },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 },
@@ -1208,8 +1803,9 @@ const s = StyleSheet.create({
   otpTop: { height: 56, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   otpBack: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   otpBrand: { color: '#944A00', fontSize: 24, fontWeight: '700' },
-  otpCard: { marginTop: 8, borderRadius: 24, backgroundColor: '#fff', padding: 24, alignItems: 'center' },
+  otpCard: { marginTop: 8, borderRadius: 24, backgroundColor: '#fff', padding: 24, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   otpHero: { width: 90, height: 84, marginBottom: 16 },
+  otpIconContainer: { width: 72, height: 66, borderRadius: 9999, backgroundColor: '#FFF1EA', alignItems: 'center', justifyContent: 'center' },
   otpTitle: { color: '#261810', fontSize: 28, fontWeight: '700', marginBottom: 8 },
   otpSub: { color: '#564337', fontSize: 16, lineHeight: 24, textAlign: 'center', marginBottom: 24 },
   otpRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
@@ -1225,60 +1821,95 @@ const s = StyleSheet.create({
   secureTxt: { color: '#564337', fontSize: 12 },
 
   homeWrap: { flex: 1, backgroundColor: '#F4F0EF' },
-  homeTopGlow: { position: 'absolute', left: -40, top: -20, width: 240, height: 220, borderBottomRightRadius: 120, borderBottomLeftRadius: 60, backgroundColor: '#FFE2C8' },
-  homeContent: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 110 },
-  homeHeader: { height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  homeUserBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: '#D58B33', overflow: 'hidden' },
-  homeUserAvatar: { width: '100%', height: '100%' },
+  // Two large decorative blur circles matching Figma Overlay+Blur nodes (320Ã—320 each)
+  homeTopGlow: { position: 'absolute', right: -90, top: -160, width: 320, height: 320, borderRadius: 160, backgroundColor: '#FFDAB3', opacity: 0.35 },
+  homeBottomGlow: { position: 'absolute', left: -180, top: 114, width: 320, height: 320, borderRadius: 160, backgroundColor: '#E8D4B8', opacity: 0.25 },
+  homeContent: { paddingHorizontal: 14, paddingTop: 6, paddingBottom: 110 },
+  homeHeader: { backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, zIndex: 10 },
+  homeUserBtn: { width: 48, height: 48, borderRadius: 9999, borderWidth: 2, borderColor: '#F37021', padding: 2, overflow: 'hidden' },
+  homeUserAvatar: { width: '100%', height: '100%', borderRadius: 9999 },
   homeBrand: { color: '#1A78C1', fontSize: 24, fontWeight: '700' },
   homeBellWrap: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  homePetCard: { borderRadius: 24, backgroundColor: '#FCEFD7', padding: 12, flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  homePetImg: { width: 86, height: 86, borderRadius: 43, borderWidth: 3, borderColor: '#fff' },
+  homeBellBtn: { width: 35, height: 40, padding: 8, alignItems: 'center', justifyContent: 'center' },
+  // Pet profile card â€” Figma: solid warm background, 40px gap to actions below
+  homePetCard: { width: '100%', height: 146, borderRadius: 40, backgroundColor: '#FFF5EB', padding: 14, flexDirection: 'row', alignItems: 'center', marginBottom: 40, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  homePetImgWrap: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+  homePetImg: { width: 88, height: 88, borderRadius: 44, margin: 4 },
+  // Status badge overlay at bottom-right of avatar â€” Figma: 24Ã—24
+  homePetStatusBadge: { position: 'absolute', right: -2, bottom: -2, width: 24, height: 24, borderRadius: 12, backgroundColor: '#4CAF50', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
   homePetBody: { flex: 1, marginLeft: 10 },
-  homePetName: { color: '#261810', fontSize: 38, lineHeight: 42, fontWeight: '800', marginRight: 8 },
-  homeActive: { alignSelf: 'center', backgroundColor: '#DDF1D2', color: '#1F8A44', fontSize: 10, fontWeight: '700', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  homePetName: { color: '#261810', fontSize: 30, lineHeight: 36, fontWeight: '800', marginRight: 8 },
+  homeActive: { alignSelf: 'center', backgroundColor: '#DDF1D2', color: '#1F8A44', fontSize: 10, fontWeight: '900', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
   homeHealthPill: { marginTop: 6, alignSelf: 'flex-start', borderRadius: 999, backgroundColor: '#F3C47D', paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', alignItems: 'center' },
-  homeHealthTxt: { color: '#663D0B', fontSize: 16, fontWeight: '600' },
-  homeActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
-  homeAction: { width: 74, height: 84, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  homeHealthTxt: { color: '#663D0B', fontSize: 12, fontWeight: '600' },
+  // Quick Actions â€” Figma: 24px gap to Vitals section below
+  homeActions: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  homeAction: { flex: 1, height: 96, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', paddingTop: 16 },
   homeActionIconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  homeActionLabel: { color: '#3E2F26', fontSize: 14, fontWeight: '600' },
-  homeSectionTitle: { color: '#261810', fontSize: 34, lineHeight: 40, fontWeight: '700', marginBottom: 10 },
-  homeVitalsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
-  homeVitalCard: { width: '48.5%', minHeight: 144, borderRadius: 24, backgroundColor: '#fff', padding: 14 },
-  homeVitalLabel: { color: '#4F3D31', fontSize: 16, fontWeight: '600', marginBottom: 12 },
-  homeVitalValue: { color: '#261810', fontSize: 34, fontWeight: '700' },
-  homeVitalUnit: { color: '#6D5B50', fontSize: 18, fontWeight: '500' },
-  homeVitalAccent: { color: '#00A66D', fontSize: 12, fontWeight: '700', marginTop: 2, letterSpacing: 1.2 },
+  homeActionLabel: { color: '#3E2F26', fontSize: 12, fontWeight: '500' },
+  homeSectionTitle: { color: '#261810', fontSize: 20, lineHeight: 28, fontWeight: '600', marginBottom: 10 },
+  // Vitals row â€” Figma: 24px gap to next section (Upcoming Care)
+  homeVitalsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
+  homeVitalCard: { width: '48.5%', minHeight: 144, borderRadius: 24, backgroundColor: '#fff', padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  homeVitalLabel: { color: '#4F3D31', fontSize: 14, fontWeight: '600', marginBottom: 12 },
+  homeVitalValue: { color: '#261810', fontSize: 32, fontWeight: '400' },
+  homeVitalUnit: { color: '#6D5B50', fontSize: 16, fontWeight: '400' },
+  homeVitalAccent: { color: '#00A66D', fontSize: 10, fontWeight: '700', marginTop: 2, letterSpacing: 1.2 },
   homeBarBg: { height: 6, borderRadius: 6, backgroundColor: '#E8E3E1', marginTop: 14, marginBottom: 6, overflow: 'hidden' },
   homeBarFill: { width: '62%', height: '100%', backgroundColor: '#F39A18' },
-  homeMuted: { color: '#6D5B50', fontSize: 14 },
+  homeMuted: { color: '#6D5B50', fontSize: 12, fontWeight: '500' },
   homeActiveToday: { marginTop: 16 },
-  homeRateCard: { borderRadius: 22, backgroundColor: '#fff', padding: 16, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  homeRateTitle: { color: '#4F3D31', fontSize: 15, marginBottom: 4 },
-  homeRateValue: { color: '#261810', fontSize: 42, lineHeight: 48, fontWeight: '700' },
-  homeRateBars: { color: '#F0A126', fontSize: 38, letterSpacing: 2, fontWeight: '700' },
+  // Heart Rate card â€” Figma: 24px gap to Upcoming Care below
+  homeRateCard: { borderRadius: 32, backgroundColor: '#FFFFFF', padding: 24, marginBottom: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  homeRateLeft: {},
+  homeRateTitle: { color: '#564334', fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  homeRateValueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  homeRateValue: { color: '#1C1B1B', fontSize: 32, lineHeight: 48, fontWeight: '400' },
+  homeRateUnitWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 12 },
+  homeRateUnit: { color: '#897362', fontSize: 16, fontWeight: '400' },
+  homeRateBars: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 48 },
+  homeRateBar: { width: 6, borderRadius: 9999 },
   homeSectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  homeViewAll: { color: '#A65F00', fontSize: 20, fontWeight: '600', marginBottom: 10 },
-  homeCareCard: { borderRadius: 20, backgroundColor: '#fff', padding: 12, flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  homeDays: { width: 54, height: 54, borderRadius: 14, backgroundColor: '#FFE0DF', alignItems: 'center', justifyContent: 'center' },
-  homeDaysTxt: { color: '#B62828', textAlign: 'center', fontSize: 12, fontWeight: '700' },
-  homeCareBody: { flex: 1, marginLeft: 10 },
-  homeCareTitle: { color: '#261810', fontSize: 24, lineHeight: 28, fontWeight: '700' },
-  homeCareSub: { color: '#6D5B50', fontSize: 14 },
-  homeBookBtn: { height: 38, borderRadius: 999, paddingHorizontal: 22, backgroundColor: '#A65F00', alignItems: 'center', justifyContent: 'center' },
-  homeBookTxt: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  homeRecentCard: { borderRadius: 20, backgroundColor: '#fff', padding: 12, flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
+  homeViewAll: { color: '#904D00', fontSize: 14, fontWeight: '600', marginBottom: 10 },
+  homeCareList: { gap: 12, marginBottom: 14 },
+  homeCareCard: { borderRadius: 24, backgroundColor: '#FFFFFF', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  homeCareCardAlt: { backgroundColor: '#F6F3F2', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(137, 115, 98, 0.10)' },
+  homeDays: { width: 56, height: 56, borderRadius: 16, backgroundColor: '#FFDAD6', alignItems: 'center', justifyContent: 'center' },
+  homeDaysAlt: { borderRadius: 16, backgroundColor: 'rgba(137, 115, 98, 0.10)' },
+  homeDaysNum: { color: '#93000A', fontSize: 18, fontWeight: '700', lineHeight: 23 },
+  homeDaysLbl: { color: '#93000A', fontSize: 10, fontWeight: '900', lineHeight: 15 },
+  homeCareBody: { flex: 1, marginLeft: 0 },
+  homeCareTitle: { color: '#1C1B1B', fontSize: 14, lineHeight: 18, fontWeight: '600' },
+  homeCareSub: { color: '#564334', fontSize: 12, fontWeight: '500' },
+  homeBookBtn: { borderRadius: 9999, paddingHorizontal: 24, paddingVertical: 8, backgroundColor: '#904D00', alignItems: 'center', justifyContent: 'center' },
+  homeBookTxt: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  homeRecentCard: { flex: 1, borderRadius: 32, backgroundColor: '#FFFFFF', padding: 20, flexDirection: 'column', marginBottom: 0, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  homeRecentCardWalk: { minHeight: 182 },
   homeRecentIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFEADF', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   homeRecentBody: { flex: 1 },
-  homeDistance: { color: '#7059F6', fontSize: 22, fontWeight: '700' },
-
+  homeDistance: { color: '#5E39E0', fontSize: 14, fontWeight: '700' },
+  homeRecentWalkHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  homeRecentWalkLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  homeRecentIconWalk: { width: 27, height: 34, borderRadius: 12, backgroundColor: '#E6DEFF', alignItems: 'center', justifyContent: 'center' },
+  homeRecentIconFeed: { width: 29, height: 33, borderRadius: 12, backgroundColor: '#FFDCC3', alignItems: 'center', justifyContent: 'center' },
+  homeRecentSubAlt: { color: '#897362', fontSize: 12, fontWeight: '500' },
+  homeWalkMap: { height: 96, borderRadius: 16, backgroundColor: '#F0EDED', alignItems: 'center', justifyContent: 'center' },
+  homeWalkMapPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 4, color: '#5E39E0', fontSize: 10, fontWeight: '700' },
+  homeWalkMapPillTxt: { color: '#5E39E0', fontSize: 10, fontWeight: '700' },
+  homeFeedPill: { backgroundColor: '#FF8C00', borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 4 },
+  homeFeedPillTxt: { color: '#623200', fontSize: 10, fontWeight: '700' },
+  homeTimeline: { paddingLeft: 0 },
+  homeTimelineItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 24 },
+  homeTimelineRail: { width: 24, alignItems: 'center', marginRight: 16, marginTop: 2 },
+  homeTimelineDot: { width: 24, height: 24, borderRadius: 9999, backgroundColor: '#FFFFFF', borderWidth: 4, borderColor: '#FFDCC3', alignItems: 'center', justifyContent: 'center' },
+  homeTimelineDotInner: { width: 8, height: 8, borderRadius: 9999, backgroundColor: '#904D00' },
+  homeTimelineLine: { width: 4, flex: 1, minHeight: 60, backgroundColor: '#FFDCC3', marginTop: 4 },
   profileWrap: { flex: 1, backgroundColor: '#FFF8F5', paddingTop: 8 },
   profileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 8 },
   topAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 16 },
   profileTitle: { color: '#944A00', fontSize: 20, fontWeight: '600' },
   profileContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 130, gap: 20 },
-  profileCard: { backgroundColor: '#fff', borderRadius: 12, padding: 24, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  profileCard: { backgroundColor: '#fff', borderRadius: 12, padding: 24, flexDirection: 'row', alignItems: 'center', gap: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   profileAvatar: { width: 80, height: 80, borderRadius: 40 },
   profileBody: { flex: 1 },
   profileName: { color: '#261810', fontSize: 20, fontWeight: '600', marginBottom: 4 },
@@ -1292,7 +1923,7 @@ const s = StyleSheet.create({
   petRing: { width: 96, height: 96, borderRadius: 48, padding: 4 },
   petImg: { width: '100%', height: '100%', borderRadius: 44 },
   petName: { marginTop: 4, color: '#261810', fontSize: 14, fontWeight: '600' },
-  settings: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden' },
+  settings: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   setting: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 22 },
   settingBorder: { borderBottomWidth: 1, borderBottomColor: '#FFF8F5' },
   settingIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FFEADF', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
@@ -1301,12 +1932,13 @@ const s = StyleSheet.create({
   chevron: { width: 8, height: 12 },
   logout: { height: 56, borderRadius: 16, borderWidth: 2, borderColor: '#E67E22', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   logoutTxt: { color: '#E67E22', fontSize: 16 },
-  nav: { position: 'absolute', left: 20, right: 20, bottom: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.85)', paddingVertical: 8, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  // Bottom navigation â€” glassmorphism pill
+  nav: { position: 'absolute', left: 20, right: 20, bottom: 16, borderRadius: 9999, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', paddingVertical: 8, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 32, elevation: 10 },
   navItem: { width: 64, height: 48, alignItems: 'center', justifyContent: 'center', gap: 4 },
   navIconWrap: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
-  navTxt: { color: '#564337', fontSize: 10 },
+  navTxt: { color: '#564337', fontSize: 10, fontWeight: '500' },
   navActive: { width: 80, height: 56, borderRadius: 999, backgroundColor: '#E67E22', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  navActiveTxt: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  navActiveTxt: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
   // Edit Profile screen
   editProfileWrap: { flexGrow: 1, backgroundColor: '#FFF8F5', paddingBottom: 32 },
@@ -1402,5 +2034,75 @@ const s = StyleSheet.create({
   petConfirmCancelTxt: { color: '#944A00', fontSize: 14, fontWeight: '700' },
   petConfirmDelete: { flex: 1, height: 48, borderRadius: 999, backgroundColor: '#BA1A1A', alignItems: 'center', justifyContent: 'center' },
   petConfirmDeleteTxt: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+
+  // Records screen (REC-006)
+  recWrap: { flex: 1, backgroundColor: '#FFF8F5' },
+  recHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8, zIndex: 10 },
+  recTitle: { color: '#944A00', fontSize: 20, fontWeight: '700' },
+  recSearchWrap: { paddingHorizontal: 20, paddingBottom: 12 },
+  recSearchBox: { height: 48, borderRadius: 16, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  recSearchInput: { flex: 1, color: '#261810', fontSize: 14, padding: 0 },
+  recClearTxt: { color: '#897365', fontSize: 16, paddingHorizontal: 4 },
+  recChips: { paddingHorizontal: 20, paddingBottom: 8 },
+  recChip: { height: 36, borderRadius: 999, backgroundColor: '#FFFFFF', paddingHorizontal: 14, marginRight: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FEE3D5' },
+  recChipActive: { backgroundColor: '#944A00', borderColor: '#944A00' },
+  recChipTxt: { color: '#564337', fontSize: 12, fontWeight: '600' },
+  recChipTxtActive: { color: '#FFFFFF' },
+  recCountTxt: { color: '#897365', fontSize: 12, fontWeight: '600', paddingHorizontal: 20, paddingBottom: 8 },
+  recList: { paddingHorizontal: 20, paddingBottom: 120, gap: 12 },
+  recEmpty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 12 },
+  recEmptyTitle: { color: '#261810', fontSize: 18, fontWeight: '600' },
+  recEmptySub: { color: '#897365', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  recCard: { borderRadius: 20, backgroundColor: '#FFFFFF', padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  recCardIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  recCardIconTxt: { fontSize: 22 },
+  recCardBody: { flex: 1 },
+  recCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  recCardTitle: { flex: 1, color: '#261810', fontSize: 15, fontWeight: '600', marginRight: 8 },
+  recCardPill: { fontSize: 10, fontWeight: '700', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  recCardPet: { color: '#564337', fontSize: 12, fontWeight: '500' },
+  recCardVet: { color: '#897365', fontSize: 11, marginTop: 2 },
+  recAttachRow: { marginTop: 6 },
+  recAttachTxt: { color: '#944A00', fontSize: 11, fontWeight: '500' },
+  recFab: { position: 'absolute', right: 20, bottom: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#E67E22', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 },
+  recFabTxt: { color: '#FFFFFF', fontSize: 28, fontWeight: '400', marginTop: -2 },
+
+  // Add Record form (REC-002)
+  recFormWrap: { flexGrow: 1, backgroundColor: '#FFF8F5', paddingBottom: 40 },
+  recFieldLbl: { color: '#564337', fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 16, paddingHorizontal: 20 },
+  recTypeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
+  recTypeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, borderRadius: 999, backgroundColor: '#FFFFFF', paddingHorizontal: 14, borderWidth: 1, borderColor: '#FEE3D5' },
+  recTypeChipIcon: { fontSize: 16 },
+  recTypeChipTxt: { color: '#564337', fontSize: 12, fontWeight: '600' },
+  recPetPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
+  recPetChip: { height: 40, borderRadius: 999, backgroundColor: '#FFFFFF', paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FEE3D5' },
+  recPetChipActive: { backgroundColor: '#944A00', borderColor: '#944A00' },
+  recPetChipTxt: { color: '#564337', fontSize: 13, fontWeight: '600' },
+  recPetChipTxtActive: { color: '#FFFFFF' },
+  recInput: { minHeight: 48, borderRadius: 16, backgroundColor: '#FEF5E7', paddingHorizontal: 16, paddingVertical: 12, color: '#261810', fontSize: 14, marginHorizontal: 20, marginBottom: 4 },
+  recInputMulti: { minHeight: 96, textAlignVertical: 'top' },
+  recAttachBtn: { height: 48, borderRadius: 16, borderWidth: 1, borderColor: '#FEE3D5', borderStyle: 'dashed', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginTop: 4, marginBottom: 4 },
+  recAttachBtnTxt: { color: '#944A00', fontSize: 13, fontWeight: '600' },
+  recRemoveAttachTxt: { color: '#BA1A1A', fontSize: 12, fontWeight: '500', paddingHorizontal: 20, marginTop: 6 },
+
+  // Record Detail (REC-003)
+  recDetailWrap: { flexGrow: 1, backgroundColor: '#FFF8F5', paddingBottom: 40 },
+  recDetailHero: { marginHorizontal: 20, marginTop: 12, borderRadius: 24, padding: 24, alignItems: 'center' },
+  recDetailHeroInner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  recDetailIcon: { fontSize: 28 },
+  recDetailType: { fontSize: 14, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
+  recDetailTitle: { color: '#261810', fontSize: 22, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
+  recDetailDate: { color: '#564337', fontSize: 14 },
+  recDetailSection: { paddingHorizontal: 20, marginTop: 20 },
+  recDetailLbl: { color: '#897365', fontSize: 12, fontWeight: '600', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 6 },
+  recDetailVal: { color: '#261810', fontSize: 15 },
+  recDetailDesc: { color: '#261810', fontSize: 14, lineHeight: 22 },
+  recDetailRowCard: { marginHorizontal: 20, marginTop: 20, backgroundColor: '#FFFFFF', borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  recDetailRow: { paddingHorizontal: 20, paddingVertical: 16 },
+  recDetailRowBorder: { borderTopWidth: 1, borderTopColor: '#FFF8F5' },
+  recDetailAttachCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF1EA', borderRadius: 12, padding: 16, marginTop: 4 },
+  recDetailAttachTxt: { color: '#944A00', fontSize: 14, fontWeight: '600' },
+  recDetailDelete: { alignSelf: 'center', marginTop: 32, padding: 12 },
+  recDetailDeleteTxt: { color: '#BA1A1A', fontSize: 14, fontWeight: '600' },
 });
 
