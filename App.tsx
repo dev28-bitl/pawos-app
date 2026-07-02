@@ -20,7 +20,7 @@ import {
   UIManager,
   View,
 } from 'react-native';
-import Svg, { Circle, Path, Rect, type SvgProps } from 'react-native-svg';
+import Svg, { Circle, Path, Polyline, Rect, type SvgProps } from 'react-native-svg';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, useForm } from 'react-hook-form';
@@ -72,6 +72,8 @@ import PawosFinalLogoIcon from './src/assets/icons/Pawos final logo.svg';
 import CalendarIcon from './src/assets/icons/calendar.svg';
 import BackIcon from './src/assets/icons/back-icon.svg';
 import ForwardIcon from './src/assets/icons/forward-icon.svg';
+import GoogleIcon from './src/assets/icons/google-icon.svg';
+import IosIcon from './src/assets/icons/ios-icon.svg';
 
 const supabaseModule = (() => {
   try {
@@ -123,6 +125,9 @@ const PLACEHOLDER = {
   // Real profile images for populated look
   profileAvatar: require('./src/assets/placeholders/avatar-256 1.png'),
   petPhoto: require('./src/assets/placeholders/profile-avatar 1.png'),
+  petCooper: require('./src/assets/placeholders/cooper.jpg'),
+  petLuna: require('./src/assets/placeholders/luna.jpg'),
+  petMax: require('./src/assets/placeholders/max.jpg'),
   icon: require('./src/assets/placeholders/icon-128.png'),
 } as const;
 
@@ -158,9 +163,9 @@ const ASSET = {
   profileTopAvatar: PLACEHOLDER.profileAvatar,
   profileAvatar: PLACEHOLDER.profileAvatar,
   profileStar: PLACEHOLDER.icon,
-  petCooper: PLACEHOLDER.petPhoto,
-  petLuna: PLACEHOLDER.petPhoto,
-  petMax: PLACEHOLDER.petPhoto,
+  petCooper: PLACEHOLDER.petCooper,
+  petLuna: PLACEHOLDER.petLuna,
+  petMax: PLACEHOLDER.petMax,
   bell: PLACEHOLDER.icon,
   shield: PLACEHOLDER.icon,
   plan: PLACEHOLDER.icon,
@@ -197,7 +202,8 @@ type Screen =
   | 'edit-profile'
   | 'create-pet'
   | 'pet-profile'
-  | 'edit-pet';
+  | 'edit-pet'
+  | 'privacy-security';
 
 export type PetGender = 'Male' | 'Female';
 export type PetSpecies = 'Dog' | 'Cat';
@@ -554,6 +560,14 @@ export function calculatePetAge(dateOfBirth: string): { years: number; months: n
   if (years < 0) years = 0;
   if (months < 0) months = 0;
   return { years, months, label: `${years}y ${months}m` };
+}
+
+function getPetImageSource(pet: Pet): ImageSourcePropType {
+  if (pet.photo) return { uri: pet.photo };
+  if (pet.id === 'p-cooper') return ASSET.petCooper;
+  if (pet.id === 'p-luna') return ASSET.petLuna;
+  if (pet.id === 'p-max') return ASSET.petMax;
+  return PLACEHOLDER.petPhoto;
 }
 
 export default function App() {
@@ -1027,7 +1041,7 @@ export default function App() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFF8F5" />
       <SafeAreaView style={s.screen}>
         {screen === 'splash' && <SplashScreen />}
-        {screen === 'health' && <HealthScreen onNext={() => setScreen('activity')} onSkip={() => setScreen('activity')} />}
+        {screen === 'health' && <HealthScreen onNext={() => setScreen('activity')} onSkip={() => setScreen('login')} />}
         {screen === 'activity' && <ActivityScreen onBack={() => setScreen('health')} onNext={() => setScreen('login')} onSkip={() => setScreen('login')} />}
         {screen === 'login' && <LoginScreen onSend={() => setScreen('otp')} onCreate={() => setScreen('signup')} />}
         {screen === 'signup' && <SignupScreen onCreate={() => setScreen('otp')} onLogin={() => setScreen('login')} />}
@@ -1092,6 +1106,7 @@ export default function App() {
             onActivity={() => setScreen('activity-tracker')}
             onLogout={() => setScreen('login')}
             onEdit={() => setScreen('edit-profile')}
+            onPrivacySecurity={() => setScreen('privacy-security')}
             pets={pets}
             overdueCount={overdueCount}
             notificationPreferences={notificationPreferences}
@@ -1110,6 +1125,13 @@ export default function App() {
           />
         )}
         {screen === 'edit-profile' && <EditProfileScreen onBack={() => setScreen('profile')} />}
+        {screen === 'privacy-security' && (
+          <PrivacySecurityScreen
+            onBack={() => setScreen('profile')}
+            userEmail={userProfile.email}
+            pets={pets}
+          />
+        )}
         {screen === 'create-pet' && <CreatePetScreen onBack={() => setScreen('profile')} onCreate={addPet} />}
         {screen === 'pet-profile' && selectedPet && (
           <PetProfileScreen
@@ -1301,7 +1323,7 @@ function LoginScreen({ onSend, onCreate }: { onSend: () => void; onCreate: () =>
     <ScrollView contentContainerStyle={s.authWrap}>
       <View style={s.authTop}><Image source={ASSET.loginTop} style={s.topDecor} /><View style={s.authLogo}><LogoIcon width={96} height={96} /></View><Text style={s.authTitle}>Welcome back</Text><Text style={s.authSub}>Sign in to your account and keep track{`\n`}of your pet&apos;s happiness.</Text></View>
       <View style={s.authCard}>
-        <TouchableOpacity style={s.googleBtn}><Image source={ASSET.loginGoogle} style={s.icon24} /><Text style={s.googleTxt}>Continue with Google</Text></TouchableOpacity>
+        <TouchableOpacity style={s.googleBtn}><GoogleIcon width={24} height={24} /><Text style={s.googleTxt}>Continue with Google</Text></TouchableOpacity>
         <View style={s.divider}><View style={s.divLine} /><Text style={s.divTxt}>OR EMAIL</Text><View style={s.divLine} /></View>
         <Text style={s.lbl}>Email address</Text>
         <TextInput style={s.input} placeholder="pawsome@example.com" placeholderTextColor="rgba(86,67,55,0.4)" />
@@ -1346,8 +1368,8 @@ function SignupScreen({ onCreate, onLogin }: { onCreate: () => void; onLogin: ()
         <View style={s.divider}><View style={s.divLineStrong} /><Text style={s.divTxtMuted}>OR SIGN UP WITH</Text><View style={s.divLineStrong} /></View>
 
         <View style={s.socialRow}>
-          <TouchableOpacity style={s.socialBtn}><Image source={ASSET.signupGoogle} style={s.icon20} /><Text style={s.socialTxt}>Google</Text></TouchableOpacity>
-          <TouchableOpacity style={s.socialBtn}><Image source={ASSET.signupApple} style={s.appleIcon} /><Text style={s.socialTxt}>Apple</Text></TouchableOpacity>
+          <TouchableOpacity style={s.socialBtn}><GoogleIcon width={20} height={20} /><Text style={s.socialTxt}>Google</Text></TouchableOpacity>
+          <TouchableOpacity style={s.socialBtn}><IosIcon width={20} height={20} /><Text style={s.socialTxt}>iOS</Text></TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={onLogin}><Text style={s.already}>Already have an account? <Text style={s.termsAccent}>Login instead</Text></Text></TouchableOpacity>
@@ -1529,7 +1551,9 @@ function HomeScreen({
 
         <View style={s.homeSectionHead}>
           <Text style={s.homeSectionTitle}>Upcoming Care</Text>
-          <Text style={s.homeViewAll}>View All</Text>
+          <TouchableOpacity onPress={onReminders} hitSlop={8}>
+            <Text style={s.homeViewAll}>View All</Text>
+          </TouchableOpacity>
         </View>
         <View style={s.homeCareList}>
           <View style={s.homeCareCard}>
@@ -1600,7 +1624,7 @@ function HomeScreen({
 
       <View style={s.nav}>
         <View style={s.navActive}>
-          <View style={s.navIconWrap}><HomeNavIcon color="#FFFFFF" fill="#FFFFFF" stroke="#FFFFFF" /></View>
+          <View style={s.navIconWrap}><HomeNavIcon color="#E67E22" fill="#E67E22" stroke="#E67E22" /></View>
           <Text style={s.navActiveTxt}>Home</Text>
         </View>
         <TouchableOpacity style={s.navItem} onPress={onRecords}>
@@ -1654,6 +1678,7 @@ function ProfileScreen({
   onActivity,
   onLogout,
   onEdit,
+  onPrivacySecurity,
   pets,
   overdueCount,
   notificationPreferences,
@@ -1670,6 +1695,7 @@ function ProfileScreen({
   onActivity: () => void;
   onLogout: () => void;
   onEdit: () => void;
+  onPrivacySecurity: () => void;
   pets: Pet[];
   overdueCount: number;
   notificationPreferences: NotificationPreferences;
@@ -1709,9 +1735,7 @@ function ProfileScreen({
           {pets.map(p => (
             <TouchableOpacity key={p.id} style={s.pet} onPress={() => onOpenPet(p.id)}>
               <View style={[s.petRing, { backgroundColor: petAccentColor(p.id) }]}>
-                {p.photo
-                  ? <Image source={{ uri: p.photo }} style={s.petImg} />
-                  : <View style={s.petImgPlaceholder}><PawIcon width={28} height={28} color="#FFFFFF" /></View>}
+                <Image source={getPetImageSource(p)} style={s.petImg} />
               </View>
               <Text style={s.petName}>{p.name}</Text>
             </TouchableOpacity>
@@ -1732,7 +1756,7 @@ function ProfileScreen({
             iconComponent={BellsIcon}
             onPress={onOpenNotificationHistory}
           />
-          <Setting iconName="shield" title="Privacy & Security" iconComponent={ShieldIcon} />
+          <Setting iconName="shield" title="Privacy & Security" iconComponent={ShieldIcon} onPress={onPrivacySecurity} />
           <Setting iconName="desktop" title="Subscription Plan" trailing="Pro" iconComponent={SubscriptionPlanIcon} />
           <Setting iconName="question-circle" title="Help & Support" last iconComponent={HelpIcon} />
         </View>
@@ -1740,12 +1764,10 @@ function ProfileScreen({
         <Text style={s.sectionTitle}>Notifications</Text>
         <View style={s.settings}>
           <View style={[s.setting, s.settingBorder]}>
-            <View style={s.row}>
-              <View style={s.settingIcon}><PushNotificationIcon width={16} height={16} /></View>
-              <View>
-                <Text style={s.settingTitle}>Push Channel</Text>
-                <Text style={s.settingSub}>Enable push reminders on this device</Text>
-              </View>
+            <View style={s.settingIcon}><PushNotificationIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Push Channel</Text>
+              <Text style={s.settingSub}>Enable push reminders on this device</Text>
             </View>
             <Switch
               value={notificationPreferences.push}
@@ -1753,12 +1775,10 @@ function ProfileScreen({
             />
           </View>
           <View style={[s.setting, s.settingBorder]}>
-            <View style={s.row}>
-              <View style={s.settingIcon}><EmailAddressIcon width={16} height={16} /></View>
-              <View>
-                <Text style={s.settingTitle}>Email Channel</Text>
-                <Text style={s.settingSub}>Send reminder emails to {userEmail}</Text>
-              </View>
+            <View style={s.settingIcon}><EmailAddressIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Email Channel</Text>
+              <Text style={s.settingSub}>Send reminder emails to {userEmail}</Text>
             </View>
             <Switch
               value={notificationPreferences.email}
@@ -1766,14 +1786,12 @@ function ProfileScreen({
             />
           </View>
           <View style={s.setting}>
-            <View style={s.row}>
-              <View style={s.settingIcon}><NotificationsIcon width={16} height={16} /></View>
-              <View>
-                <Text style={s.settingTitle}>Push Token Sync</Text>
-                <Text style={s.settingSub}>
-                  {pushTokenUpdatedAt ? `Updated ${formatRecordDate(pushTokenUpdatedAt.slice(0, 10))}` : 'Pending token capture'}
-                </Text>
-              </View>
+            <View style={s.settingIcon}><NotificationsIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Push Token Sync</Text>
+              <Text style={s.settingSub}>
+                {pushTokenUpdatedAt ? `Updated ${formatRecordDate(pushTokenUpdatedAt.slice(0, 10))}` : 'Pending token capture'}
+              </Text>
             </View>
           </View>
         </View>
@@ -1795,7 +1813,7 @@ function ProfileScreen({
         <NavItem label="Activity" iconComponent={ActivityNavIcon} onPress={onActivity} />
         <NavItem label="Reminders" iconComponent={RemindersNavIcon} onPress={onReminders} badgeCount={overdueCount} />
         <View style={s.navActive}>
-          <View style={s.navIconWrap}><SettingsNavIcon color="#FFFFFF" fill="#FFFFFF" stroke="#FFFFFF" /></View>
+          <View style={s.navIconWrap}><SettingsNavIcon color="#E67E22" fill="#E67E22" stroke="#E67E22" /></View>
           <Text style={s.navActiveTxt}>Settings</Text>
         </View>
       </View>
@@ -1810,6 +1828,7 @@ function Setting({
   last,
   onPress,
   iconComponent: IconComponent,
+  sub,
 }: {
   iconName: string;
   title: string;
@@ -1817,20 +1836,325 @@ function Setting({
   last?: boolean;
   onPress?: () => void;
   iconComponent?: React.ComponentType<SvgProps>;
+  sub?: string;
 }) {
   return (
     <TouchableOpacity style={[s.setting, !last && s.settingBorder]} onPress={onPress} disabled={!onPress}>
-      <View style={s.row}>
-        <View style={s.settingIcon}>
-          {IconComponent ? <IconComponent /> : <AppIcon name={iconName} size={16} color="#644B3C" />}
-        </View>
+      {IconComponent ? <View style={s.settingIcon}><IconComponent width={16} height={16} /></View> : <AppIcon name={iconName} size={16} color="#644B3C" />}
+      <View style={[s.settingLabelWrap, sub && s.settingBody]}>
         <Text style={s.settingTitle}>{title}</Text>
+        {sub ? <Text style={s.settingSub}>{sub}</Text> : null}
       </View>
-      <View style={s.row}>
+      <View style={[s.row, s.settingRight]}>
         {trailing ? <Text style={s.trailing}>{trailing}</Text> : null}
         <RightArrowIcon width={8} height={12} />
       </View>
     </TouchableOpacity>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Privacy & Security Page Icons (inline SVG)
+// ──────────────────────────────────────────────
+function ClockIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Circle cx={12} cy={12} r={10} stroke="#644B3C" strokeWidth={2} />
+      <Path d="M12 6v6l4 2" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+function DevicesIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Rect x={4} y={5} width={12} height={14} rx={2} stroke="#644B3C" strokeWidth={2} />
+      <Path d="M18 9h2a1 1 0 011 1v8a1 1 0 01-1 1h-2" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+function FingerprintIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M7 13a5 5 0 0110 0c0 3-2 5-2 7" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M10 17a3 3 0 004 0" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M12 4a9 9 0 019 9c0 2-.5 4-1.5 6" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+function TimerIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Circle cx={12} cy={13} r={8} stroke="#644B3C" strokeWidth={2} />
+      <Path d="M12 9v4l3 2" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M9 2h6" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+function PinIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Rect x={5} y={11} width={14} height={10} rx={2} stroke="#644B3C" strokeWidth={2} />
+      <Circle cx={12} cy={16} r={1.5} fill="#644B3C" />
+      <Path d="M8 11V7a4 4 0 118 0v4" stroke="#644B3C" strokeWidth={2} />
+    </Svg>
+  );
+}
+function AnalyticsIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M3 20h18M6 16V8m6 8V4m6 12v-6" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+function AdIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Rect x={3} y={3} width={18} height={18} rx={3} stroke="#644B3C" strokeWidth={2} />
+      <Path d="M3 9h18M9 21V9" stroke="#644B3C" strokeWidth={2} />
+    </Svg>
+  );
+}
+function VetShareIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M22 4L12 14.01l-3-3" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+function ActivityDataIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+function PetShareIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Circle cx={9} cy={7} r={4} stroke="#644B3C" strokeWidth={2} />
+      <Path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+function ExportIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+function ConnectedAppsIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+function CacheIcon(props: SvgProps) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" {...props}>
+      <Polyline points="3 6 5 6 21 6" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="#644B3C" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Privacy & Security Screen
+// ──────────────────────────────────────────────
+function PrivacySecurityScreen({
+  onBack,
+  userEmail,
+  pets,
+}: {
+  onBack: () => void;
+  userEmail: string;
+  pets: Pet[];
+}) {
+  const [biometricLock, setBiometricLock] = useState(false);
+  const [twoFactor, setTwoFactor] = useState(false);
+  const [analytics, setAnalytics] = useState(true);
+  const [personalizedAds, setPersonalizedAds] = useState(false);
+  const [shareWithVet, setShareWithVet] = useState(true);
+  const [exerciseData, setExerciseData] = useState(true);
+
+  return (
+    <View style={s.profileWrap}>
+      <View style={s.profileTop}>
+        <TouchableOpacity style={s.otpBack} onPress={onBack}><BackButtonIcon width={16} height={16} /></TouchableOpacity>
+        <Text style={s.profileTitle}>Privacy & Security</Text>
+        <View style={{ width: 32 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={s.privacyContent}>
+        {/* ── Account Security ── */}
+        <Text style={s.sectionTitle}>Account Security</Text>
+        <View style={s.settings}>
+          <Setting
+            iconName="lock"
+            title="Change Password"
+            iconComponent={PasswordIcon}
+            sub="Update your password regularly"
+          />
+          <View style={[s.setting, s.settingBorder]}>
+            <View style={s.settingIcon}><ShieldIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Two-Factor Authentication</Text>
+              <Text style={s.settingSub}>Add an extra layer of protection via SMS code</Text>
+            </View>
+            <Switch value={twoFactor} onValueChange={setTwoFactor} />
+          </View>
+          <Setting
+            iconName="clock"
+            title="Login Activity"
+            trailing="2 hours ago"
+            iconComponent={ClockIcon}
+            sub="Last sign-in from Samsung A14"
+          />
+          <Setting
+            iconName="devices"
+            title="Active Sessions"
+            trailing="2 devices"
+            last
+            iconComponent={DevicesIcon}
+          />
+        </View>
+
+        {/* ── App Lock (Biometric) ── */}
+        <Text style={s.sectionTitle}>App Lock</Text>
+        <View style={s.settings}>
+          <View style={[s.setting, s.settingBorder]}>
+            <View style={s.settingIcon}><FingerprintIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Biometric Lock</Text>
+              <Text style={s.settingSub}>Require Face / Fingerprint to open Pawos</Text>
+            </View>
+            <Switch value={biometricLock} onValueChange={setBiometricLock} />
+          </View>
+          <Setting
+            iconName="timer"
+            title="Auto-Lock After"
+            trailing="Immediately"
+            iconComponent={TimerIcon}
+            sub="Lock when app goes to background"
+          />
+          <Setting
+            iconName="keypad"
+            title="PIN Code"
+            trailing="Not set"
+            last
+            iconComponent={PinIcon}
+            sub="4-digit backup unlock method"
+          />
+        </View>
+
+        {/* ── Data Privacy ── */}
+        <Text style={s.sectionTitle}>Data Privacy</Text>
+        <View style={s.settings}>
+          <View style={[s.setting, s.settingBorder]}>
+            <View style={s.settingIcon}><AnalyticsIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Analytics & Diagnostics</Text>
+              <Text style={s.settingSub}>Help improve Pawos by sharing anonymous usage data</Text>
+            </View>
+            <Switch value={analytics} onValueChange={setAnalytics} />
+          </View>
+          <View style={[s.setting, s.settingBorder]}>
+            <View style={s.settingIcon}><AdIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Personalized Ads</Text>
+              <Text style={s.settingSub}>Allow partners to show ads based on your activity</Text>
+            </View>
+            <Switch value={personalizedAds} onValueChange={setPersonalizedAds} />
+          </View>
+          <View style={[s.setting, s.settingBorder]}>
+            <View style={s.settingIcon}><VetShareIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Share Health Records with Vet</Text>
+              <Text style={s.settingSub}>Let linked veterinarians view your pet records</Text>
+            </View>
+            <Switch value={shareWithVet} onValueChange={setShareWithVet} />
+          </View>
+          <View style={[s.setting]}>
+            <View style={s.settingIcon}><ActivityDataIcon width={16} height={16} /></View>
+            <View style={s.settingBody}>
+              <Text style={s.settingTitle}>Exercise Data Collection</Text>
+              <Text style={s.settingSub}>Required for activity tracking & health insights</Text>
+            </View>
+            <Switch value={exerciseData} onValueChange={setExerciseData} />
+          </View>
+        </View>
+
+        {/* ── Pet Data Sharing ── */}
+        <Text style={s.sectionTitle}>Pet Data Sharing</Text>
+        <View style={s.settings}>
+          {pets.map((pet, idx) => (
+            <View key={pet.id} style={[s.setting, idx < pets.length - 1 && s.settingBorder]}>
+              <View style={s.settingIcon}><PetShareIcon width={16} height={16} /></View>
+              <View style={s.settingBody}>
+                <Text style={s.settingTitle}>{pet.name}'s Records</Text>
+                <Text style={s.settingSub}>Share {pet.name}'s data with linked vets</Text>
+              </View>
+              <Switch value={shareWithVet} onValueChange={(v) => setShareWithVet(v)} />
+            </View>
+          ))}
+          <Setting
+            iconName="download"
+            title="Export My Data"
+            iconComponent={ExportIcon}
+            onPress={() => {}}
+            sub="Download a copy of all pet records (GDPR)"
+            last
+          />
+        </View>
+
+        {/* ── Permissions & Control ── */}
+        <Text style={s.sectionTitle}>Permissions & Control</Text>
+        <View style={s.settings}>
+          <Setting
+            iconName="bell"
+            title="Manage Notifications"
+            iconComponent={BellsIcon}
+            sub="System notification permissions"
+          />
+          <Setting
+            iconName="link"
+            title="Connected Apps"
+            trailing="Google, Apple Health"
+            iconComponent={ConnectedAppsIcon}
+            sub="Third-party services with access to your data"
+          />
+          <Setting
+            iconName="trash"
+            title="Clear Cache"
+            trailing="12.4 MB"
+            last
+            iconComponent={CacheIcon}
+            sub="Free up local storage without deleting data"
+          />
+        </View>
+
+        {/* ── Danger Zone ── */}
+        <TouchableOpacity style={s.editDeleteBtn} onPress={() => Alert.alert('Delete Account', 'This action cannot be undone. All your pets, records, and reminders will be permanently deleted.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => {} }])}>
+          <DeleteAccountIcon width={16} height={16} />
+          <Text style={s.editDeleteTxt}>Delete Account</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={s.logout} onPress={onBack}>
+          <LogoutIcon width={18} height={18} />
+          <Text style={s.logoutTxt}>Log Out of All Devices</Text>
+        </TouchableOpacity>
+
+        {/* Footer */}
+        <Text style={s.privacyFooter}>
+          Pawos is committed to protecting your privacy. Your data is encrypted in transit and at rest.
+          {'\n'}Last updated: July 2026 · View Full Privacy Policy
+        </Text>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -2173,7 +2497,7 @@ function ActivityTrackerScreen({
           <Text style={s.navTxt}>Health</Text>
         </TouchableOpacity>
         <View style={s.navActive}>
-          <View style={s.navIconWrap}><ActivityNavIcon color="#FFFFFF" fill="#FFFFFF" stroke="#FFFFFF" /></View>
+          <View style={s.navIconWrap}><ActivityNavIcon color="#E67E22" fill="#E67E22" stroke="#E67E22" /></View>
           <Text style={s.navActiveTxt}>Activity</Text>
         </View>
         <TouchableOpacity style={s.navItem} onPress={onReminders}>
@@ -2202,7 +2526,7 @@ function NavItem({
   badgeCount?: number;
   active?: boolean;
 }) {
-  const iconColor = active ? '#FFFFFF' : '#644B3C';
+  const iconColor = active ? '#E67E22' : '#644B3C';
   return (
     <TouchableOpacity style={s.navItem} onPress={onPress} disabled={!onPress}>
       <View style={s.navIconWrap}>
@@ -2608,14 +2932,14 @@ function PetProfileScreen({
   const [confirming, setConfirming] = useState(false);
   const age = calculatePetAge(pet.dateOfBirth);
   const accent = petAccentColor(pet.id);
-  const photo = pet.photo || '';
+  const photoSource = getPetImageSource(pet);
 
   return (
     <View style={s.petProfileWrap}>
       <ScrollView contentContainerStyle={s.petProfileContent} showsVerticalScrollIndicator={false}>
-        {photo ? (
+        {photoSource ? (
           <View style={s.petHeroWrap}>
-            <Image source={{ uri: photo }} style={s.petHero} />
+            <Image source={photoSource} style={s.petHero} />
             <View style={s.petProfileBackWrap}>
               <TouchableOpacity style={s.otpBack} onPress={onBack}><BackButtonIcon width={16} height={16} color="#FFFFFF" /></TouchableOpacity>
             </View>
@@ -3291,7 +3615,7 @@ function RemindersScreen({
         <NavItem label="Activity" iconComponent={ActivityNavIcon} onPress={onActivity} />
         <View style={s.navActive}>
           <View style={s.navIconWrap}>
-            <RemindersNavIcon color="#FFFFFF" fill="#FFFFFF" stroke="#FFFFFF" />
+            <RemindersNavIcon color="#E67E22" fill="#E67E22" stroke="#E67E22" />
             {overdueCount > 0 ? (
               <View style={s.navBadge}><Text style={s.navBadgeTxt}>{overdueCount > 9 ? '9+' : overdueCount}</Text></View>
             ) : null}
@@ -4151,7 +4475,7 @@ const s = StyleSheet.create({
   authTop: { alignItems: 'center' },
   topDecor: { position: 'absolute', left: -40, top: -40, width: 160, height: 180 },
   authLogo: { width: 120, height: 52, marginBottom: 24 },
-  authLogoSm: { width: 111, height: 48, marginBottom: 16 },
+  authLogoSm: { width: 111, height: 48, marginBottom: 16, alignSelf: 'center' },
   authTitle: { color: '#261810', fontSize: 28, lineHeight: 36, fontWeight: '700', marginBottom: 4, textAlign: 'center' },
   authSub: { color: '#564337', fontSize: 16, lineHeight: 24, textAlign: 'center', marginBottom: 24 },
   authCard: { backgroundColor: '#fff', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
@@ -4326,13 +4650,16 @@ const s = StyleSheet.create({
   petRing: { width: 96, height: 96, borderRadius: 48, padding: 4 },
   petImg: { width: '100%', height: '100%', borderRadius: 44 },
   petName: { marginTop: 4, color: '#261810', fontSize: 14, fontWeight: '600' },
-  settings: { backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
-  setting: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 22 },
+  settings: { backgroundColor: '#fff', borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  setting: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 14, minHeight: 56 },
+  settingBody: { flex: 1, marginLeft: 10, minWidth: 0 },
   settingBorder: { borderBottomWidth: 1, borderBottomColor: '#FFF8F5' },
-  settingIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FFEADF', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  settingTitle: { color: '#261810', fontSize: 16 },
-  settingSub: { color: '#897365', fontSize: 12, marginTop: 2 },
+  settingIcon: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  settingTitle: { color: '#261810', fontSize: 16, flexShrink: 1 },
+  settingSub: { color: '#897365', fontSize: 12, marginTop: 2, flexShrink: 1 },
   trailing: { color: '#944A00', fontSize: 14, fontWeight: '600', marginRight: 6 },
+  settingLabelWrap: { flex: 1, minWidth: 0 },
+  settingRight: { alignSelf: 'center' },
   chevron: { width: 8, height: 12 },
   notifHistoryContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 120, gap: 12 },
   notifHistoryIntro: { color: '#564337', fontSize: 13, marginBottom: 4 },
@@ -4396,14 +4723,14 @@ const s = StyleSheet.create({
   logout: { height: 56, borderRadius: 16, borderWidth: 2, borderColor: '#E67E22', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   logoutTxt: { color: '#E67E22', fontSize: 16 },
   // Bottom navigation â€” glassmorphism pill
-  nav: { position: 'absolute', left: 20, right: 20, bottom: 16, borderRadius: 9999, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', paddingVertical: 8, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 32, elevation: 10 },
-  navItem: { width: 64, height: 48, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  nav: { position: 'absolute', left: 20, right: 20, bottom: 16, borderRadius: 9999, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 32, elevation: 10 },
+  navItem: { flex: 1, height: 50, alignItems: 'center', justifyContent: 'center', gap: 3 },
   navIconWrap: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   navBadge: { position: 'absolute', top: -6, right: -10, minWidth: 16, height: 16, borderRadius: 999, backgroundColor: '#EF4444', paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   navBadgeTxt: { color: '#FFFFFF', fontSize: 9, fontWeight: '800' },
   navTxt: { color: '#564337', fontSize: 10, fontWeight: '500' },
-  navActive: { width: 80, height: 56, borderRadius: 999, backgroundColor: '#E67E22', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  navActiveTxt: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  navActive: { flex: 1, height: 50, borderRadius: 999, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  navActiveTxt: { color: '#E67E22', fontSize: 10, fontWeight: '700' },
 
   // Edit Profile screen
   editProfileWrap: { flexGrow: 1, backgroundColor: '#FFF8F5', paddingBottom: 32 },
@@ -4416,6 +4743,8 @@ const s = StyleSheet.create({
   editSectionLbl: { color: '#564337', fontSize: 14, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 16 },
   editDeleteBtn: { marginTop: 24, marginHorizontal: 20, height: 56, borderRadius: 16, borderWidth: 2, borderColor: '#F4D7D7', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   editDeleteTxt: { color: '#BA1A1A', fontSize: 16, fontWeight: '600' },
+  privacyContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 130, gap: 20 },
+  privacyFooter: { color: '#B09080', fontSize: 11, textAlign: 'center', lineHeight: 18, marginTop: 16, marginBottom: 24 },
 
   // Pet list tiles on the Profile screen
   petImgPlaceholder: { width: '100%', height: '100%', borderRadius: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.25)' },
