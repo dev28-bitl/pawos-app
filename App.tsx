@@ -4998,7 +4998,7 @@ const s = StyleSheet.create({
 
   // Reminders list — redesigned per reference mockup
   remWrap: { flex: 1, backgroundColor: '#FFF8F5' },
-  remTopHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10, backgroundColor: '#FFF8F5' },
+  remTopHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4, backgroundColor: '#FFF8F5' },
   remTopTitle: { color: '#261810', fontSize: 18, fontWeight: '800' },
   remAddBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E67E22', alignItems: 'center', justifyContent: 'center' },
   remScrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 130 },
