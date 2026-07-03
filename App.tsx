@@ -53,6 +53,8 @@ import LogoIcon from './src/assets/icons/logo.svg';
 import WalkIcon from './src/assets/icons/Walk.svg';
 import VetIcon from './src/assets/icons/Vet.svg';
 import PushNotificationIcon from './src/assets/icons/push-notification.svg';
+import OverdueIcon from './src/assets/icons/overdue.svg';
+import UpcomingIcon from './src/assets/icons/upcoming.svg';
 import NotificationsIcon from './src/assets/icons/notifications.svg';
 import HeartRateIcon from './src/assets/icons/heart.svg';
 import HealthAlertsIcon from './src/assets/icons/health-alerts.svg';
@@ -2654,6 +2656,34 @@ function AppIcon({ name, size = 18, color = '#644B3C' }: { name: string; size?: 
           <Path d="M9 6l6 6-6 6" {...common} />
         </Svg>
       );
+    case 'alert-circle':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Circle cx="12" cy="12" r="9" {...common} />
+          <Path d="M12 8v4M12 16h.01" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </Svg>
+      );
+    case 'more-vertical':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Circle cx="12" cy="12" r={1.5} fill={color} />
+          <Circle cx="12" cy="6" r={1.5} fill={color} />
+          <Circle cx="12" cy="18" r={1.5} fill={color} />
+        </Svg>
+      );
+    case 'check-circle':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Circle cx="12" cy="12" r="9" {...common} />
+          <Path d="m9 12 2 2 4-4" {...common} />
+        </Svg>
+      );
+    case 'plus':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2.4} strokeLinecap="round" />
+        </Svg>
+      );
     default:
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -3495,7 +3525,7 @@ function RemindersScreen({
   refreshToken: number;
   overdueCount: number;
 }) {
-  const [activeFilter, setActiveFilter] = useState<'Upcoming' | 'Overdue' | 'Completed'>('Upcoming');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Overdue' | 'Upcoming' | 'Completed'>('All');
   const [rows, setRows] = useState<ReminderWithPet[]>([]);
 
   const hydrate = useCallback(async () => {
@@ -3536,75 +3566,180 @@ function RemindersScreen({
     if (activeFilter === 'Overdue') {
       return [{ title: 'OVERDUE', data: overdueReminders }];
     }
+    if (activeFilter === 'Upcoming') {
+      return [{ title: 'UPCOMING', data: upcomingReminders }];
+    }
+    // All
     return [
       { title: 'OVERDUE', data: overdueReminders },
       { title: 'UPCOMING', data: upcomingReminders },
     ];
   }, [activeFilter, completedReminders, overdueReminders, upcomingReminders]);
 
+  const getPetById = (id: string) => pets.find(p => p.id === id) || null;
+
+  const getOverdueLabel = (due: string) => {
+    const diff = Math.floor((new Date().getTime() - new Date(due).getTime()) / 86400000);
+    if (diff <= 1) return 'OVERDUE YESTERDAY';
+    if (diff < 7) return `OVERDUE ${diff} DAYS`;
+    return `OVERDUE ${Math.ceil(diff / 7)} WEEKS`;
+  };
+
+  const getDateGroup = (due: string) => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const d = new Date(due); d.setHours(0,0,0,0);
+    const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    if (diff <= 7) return `${diff} days`;
+    return formatRecordDate(due);
+  };
+
   return (
     <View style={s.remWrap}>
-      <View style={s.remHeader}>
-        <View style={s.blank} />
-        <Text style={s.remTitle}>Reminders</Text>
-        <View style={s.blank} />
-      </View>
-
-      <View style={s.remFilterRow}>
-        <TouchableOpacity
-          style={[s.remFilterChip, activeFilter === 'Upcoming' && s.remFilterChipActive]}
-          onPress={() => setActiveFilter('Upcoming')}
-        >
-          <Text style={[s.remFilterTxt, activeFilter === 'Upcoming' && s.remFilterTxtActive]}>Upcoming</Text>
+      {/* ── Top Header ── */}
+      <View style={s.remTopHeader}>
+        <TouchableOpacity onPress={onHome} hitSlop={12}>
+          <BackIcon width={20} height={20} fill="#261810" />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[s.remFilterChip, s.remOverdueChip, activeFilter === 'Overdue' && s.remOverdueChipActive]}
-          onPress={() => setActiveFilter('Overdue')}
-        >
-          <Text style={[s.remOverdueTxt, activeFilter === 'Overdue' && s.remOverdueTxtActive]}>{`Overdue (${overdueReminders.length})`}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[s.remFilterChip, activeFilter === 'Completed' && s.remFilterChipActive]}
-          onPress={() => setActiveFilter('Completed')}
-        >
-          <Text style={[s.remFilterTxt, activeFilter === 'Completed' && s.remFilterTxtActive]}>Completed</Text>
+        <Text style={s.remTopTitle}>Reminders</Text>
+        <TouchableOpacity style={s.remAddBtn} onPress={onAddReminder} activeOpacity={0.7}>
+          <AppIcon name="plus" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        stickySectionHeadersEnabled={false}
-        contentContainerStyle={s.remListContent}
-        renderSectionHeader={({ section }) => (
-          <Text style={[s.remSectionHead, section.title === 'OVERDUE' ? s.remSectionOverdue : s.remSectionUpcoming]}>
-            {section.title}
-          </Text>
-        )}
-        renderItem={({ item, section }) => (
-          <ReminderCard
-            id={item.id}
-            petName={item.petName}
-            reminderType={item.type}
-            title={item.title}
-            dueDate={item.dueDate}
-            recurrence={item.recurrence}
-            isOverdue={section.title === 'OVERDUE'}
-            completed={item.completed}
-            onComplete={onMarkComplete}
-          />
-        )}
-        ListEmptyComponent={
-          <View style={s.remEmpty}>
-            <Text style={s.remEmptyTitle}>No reminders found</Text>
-            <Text style={s.remEmptySub}>Try another filter or add a new reminder.</Text>
+      <ScrollView contentContainerStyle={s.remScrollContent} showsVerticalScrollIndicator={false}>
+        {/* ── Hero heading ── */}
+        <View style={s.remHero}>
+          <Text style={s.remHeroTitle}>Reminders</Text>
+          <Text style={s.remHeroSub}>Keep your furry friends healthy and happy.{`\n`}Here are the tasks that need your attention today.</Text>
+        </View>
+
+        {/* ── Filter chips (horizontal scroll) ── */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.remFilterRow}>
+          {[{key:'All', icon:null}, {key:'Overdue', icon:OverdueIcon}, {key:'Upcoming', icon:UpcomingIcon}, {key:'Completed', icon:null}].map(f => {
+            const isActive = activeFilter === f.key || (f.key === 'All' && activeFilter === 'Upcoming');
+            const count = f.key === 'All' ? rows.length : f.key === 'Overdue' ? overdueReminders.length : f.key === 'Upcoming' ? upcomingReminders.length : completedReminders.length;
+            const IconComp = f.icon;
+            return (
+              <TouchableOpacity
+                key={f.key}
+                style={[s.remFilterChip, isActive && s.remFilterChipActive]}
+                onPress={() => setActiveFilter(f.key as typeof activeFilter)}
+                activeOpacity={0.75}
+              >
+                {IconComp && <IconComp width={14} height={14} />}
+                <Text style={[s.remFilterChipTxt, isActive && s.remFilterChipTxtActive]}>
+                  {f.key} {count > 0 ? `(${count})` : ''}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* ── Overdue Section ── */}
+        {(activeFilter === 'All' || activeFilter === 'Overdue') && overdueReminders.length > 0 && (
+          <View style={s.remOverdueBlock}>
+            <View style={s.remSectionRow}>
+              <OverdueIcon width={20} height={20} />
+              <Text style={s.remSectionTitleRed}>Overdue</Text>
+            </View>
+            <View style={s.remOverdueCards}>
+              {overdueReminders.map(item => {
+                const pet = getPetById(item.petId);
+                return (
+                  <View key={item.id} style={[s.remItemCard, s.remItemCardOverdue]}>
+                    <Image source={pet ? getPetImageSource(pet) : ASSET.petCooper} style={s.remItemAvatar} />
+                    <View style={s.remItemBody}>
+                      <Text style={s.remItemBadge}>{getOverdueLabel(item.dueDate)}</Text>
+                      <Text style={s.remItemTitle}>{item.title}</Text>
+                      <Text style={s.remItemSub}>{`${item.petName} \u2022 ${item.recurrence !== 'None' ? item.recurrence : item.type}`}</Text>
+                    </View>
+                    <TouchableOpacity style={[s.remCheckBtn, s.remCheckBtnRed]} onPress={() => onMarkComplete(item.id)} activeOpacity={0.8}>
+                      <TickIcon width={16} height={13} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
           </View>
-        }
-      />
+        )}
 
-      <TouchableOpacity style={s.remFab} onPress={onAddReminder} activeOpacity={0.9}>
-        <Text style={s.remFabTxt}>+</Text>
-      </TouchableOpacity>
+        {/* ── Upcoming Section ── */}
+        {(activeFilter === 'All' || activeFilter === 'Upcoming') && (
+          <View style={s.remUpcomingBlock}>
+            <View style={s.remSectionRow}>
+              <UpcomingIcon width={18} height={20} />
+              <Text style={s.remSectionTitleOrange}>Upcoming Reminders</Text>
+            </View>
+
+            {upcomingReminders.length === 0 ? (
+            <View style={s.remEmpty}>
+              <Text style={s.remEmptyTitle}>No upcoming reminders</Text>
+              <Text style={s.remEmptySub}>Tap + to add a new reminder.</Text>
+            </View>
+          ) : (
+            <View style={s.remUpcomingCards}>
+              {upcomingReminders.map(item => {
+                const pet = getPetById(item.petId);
+                const due = new Date(item.dueDate);
+                const timeStr = due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                return (
+                  <View key={item.id} style={[s.remItemCard, s.remItemCardUpcoming]}>
+                    <Image source={pet ? getPetImageSource(pet) : ASSET.petCooper} style={s.remItemAvatar} />
+                    <View style={s.remItemBody}>
+                      <View style={s.remUpcomingHeader}>
+                        <View style={s.remDateChip}><Text style={s.remDateChipTxt}>{getDateGroup(item.dueDate)}</Text></View>
+                        <TouchableOpacity activeOpacity={0.6}>
+                          <AppIcon name="more-vertical" size={16} color="#9CA3AF" />
+                        </TouchableOpacity>
+                      </View>
+                      <Text style={s.remItemTitle}>{item.title}</Text>
+                      <Text style={s.remItemSub}>{`${item.petName} \u2022 ${timeStr}`}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+        )}
+
+        {/* ── Completed Section (when active) ── */}
+        {activeFilter === 'Completed' && completedReminders.length > 0 && (
+          <View style={s.remUpcomingBlock}>
+            <View style={s.remSectionRow}>
+              <AppIcon name="check-circle" size={18} color="#10B981" />
+              <Text style={{ ...s.remSectionTitleOrange, color: '#10B981' }}>Completed</Text>
+            </View>
+            <View style={s.remUpcomingCards}>
+              {completedReminders.map(item => (
+                <View key={item.id} style={[s.remItemCard, { opacity: 0.6 }]}>
+                  <View style={s.remUpcomingHeader}>
+                    <View style={[s.remDateChip, { backgroundColor: '#F0FDF4' }]}><Text style={[s.remDateChipTxt, { color: '#059669' }]}>Done</Text></View>
+                  </View>
+                  <Text style={s.remItemTitle}>{item.title}</Text>
+                  <Text style={s.remItemSub}>{item.petName}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ── Empty state when filter has no results ── */}
+        {activeFilter === 'Overdue' && overdueReminders.length === 0 && (
+          <View style={s.remEmpty}>
+            <Text style={s.remEmptyTitle}>No overdue reminders</Text>
+            <Text style={s.remEmptySub}>You're all caught up!</Text>
+          </View>
+        )}
+        {activeFilter === 'Completed' && completedReminders.length === 0 && (
+          <View style={s.remEmpty}>
+            <Text style={s.remEmptyTitle}>No completed reminders</Text>
+            <Text style={s.remEmptySub}>Completed reminders will appear here.</Text>
+          </View>
+        )}
+      </ScrollView>
 
       <View style={s.nav}>
         <TouchableOpacity style={s.navItem} onPress={onHome}>
@@ -3628,62 +3763,10 @@ function RemindersScreen({
   );
 }
 
-function ReminderCard({
-  id,
-  petName,
-  reminderType,
-  title,
-  dueDate,
-  recurrence,
-  isOverdue,
-  completed,
-  onComplete,
-}: {
-  id: string;
-  petName: string;
-  reminderType: ReminderType;
-  title: string;
-  dueDate: string;
-  recurrence: ReminderRecurrence;
-  isOverdue: boolean;
-  completed: boolean;
-  onComplete: (id: string) => void;
-}) {
-  const fade = useRef(new Animated.Value(1)).current;
-
-  const markComplete = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    Animated.timing(fade, {
-      toValue: 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start(() => {
-      onComplete(id);
-      fade.setValue(1);
-    });
-  };
-
-  return (
-    <Animated.View style={[s.remCard, { opacity: fade }, isOverdue ? s.remCardOverdue : s.remCardUpcoming]}>
-      <TouchableOpacity
-        style={[s.remCheckbox, completed && s.remCheckboxDone]}
-        onPress={markComplete}
-        disabled={completed}
-      >
-        {completed ? <TickIcon width={10} height={8} /> : null}
-      </TouchableOpacity>
-
-      <View style={s.remCardBody}>
-        <Text style={s.remCardMeta}>{`${petName} - ${reminderType}`}</Text>
-        <Text style={s.remCardTitle}>{title}</Text>
-        <Text style={[s.remCardDate, isOverdue ? s.remCardDateOverdue : s.remCardDateUpcoming]}>{formatRecordDate(dueDate)}</Text>
-      </View>
-
-      <View style={s.remTag}>
-        <Text style={s.remTagTxt}>{recurrence}</Text>
-      </View>
-    </Animated.View>
-  );
+// ReminderCard kept for backward compat; main rendering moved inline into RemindersScreen.
+function ReminderCard(props: Parameters<typeof ReminderCard>[0]) {
+  /* no-op — card rendering is now inline in RemindersScreen */
+  return null;
 }
 
 const addReminderSchema = yup.object({
@@ -4723,7 +4806,7 @@ const s = StyleSheet.create({
   logout: { height: 56, borderRadius: 16, borderWidth: 2, borderColor: '#E67E22', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   logoutTxt: { color: '#E67E22', fontSize: 16 },
   // Bottom navigation â€” glassmorphism pill
-  nav: { position: 'absolute', left: 20, right: 20, bottom: 16, borderRadius: 9999, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 32, elevation: 10 },
+  nav: { position: 'absolute', left: 20, right: 20, bottom: 16, borderRadius: 9999, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)', paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 32, elevation: 10 },
   navItem: { flex: 1, height: 50, alignItems: 'center', justifyContent: 'center', gap: 3 },
   navIconWrap: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   navBadge: { position: 'absolute', top: -6, right: -10, minWidth: 16, height: 16, borderRadius: 999, backgroundColor: '#EF4444', paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
@@ -4913,43 +4996,50 @@ const s = StyleSheet.create({
   recDetailDelete: { alignSelf: 'center', marginTop: 32, padding: 12 },
   recDetailDeleteTxt: { color: '#BA1A1A', fontSize: 14, fontWeight: '600' },
 
-  // Reminders list
+  // Reminders list — redesigned per reference mockup
   remWrap: { flex: 1, backgroundColor: '#FFF8F5' },
-  remHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
-  remTitle: { color: '#944A00', fontSize: 22, fontWeight: '700' },
-  remAddIconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8F3FE', alignItems: 'center', justifyContent: 'center' },
-  remAddIconTxt: { color: '#1A7BC4', fontSize: 20, lineHeight: 22, fontWeight: '700' },
-  remFilterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
-  remFilterChip: { minHeight: 34, borderRadius: 999, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FFFFFF', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
-  remFilterChipActive: { backgroundColor: '#1A7BC4', borderColor: '#1A7BC4' },
-  remFilterTxt: { color: '#4B5563', fontSize: 12, fontWeight: '700' },
-  remFilterTxtActive: { color: '#FFFFFF' },
-  remOverdueChip: { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
-  remOverdueChipActive: { backgroundColor: '#991B1B', borderColor: '#991B1B' },
-  remOverdueTxt: { color: '#991B1B', fontSize: 12, fontWeight: '700' },
-  remOverdueTxtActive: { color: '#FFFFFF' },
-  remListContent: { paddingHorizontal: 16, paddingBottom: 160 },
-  remSectionHead: { marginTop: 10, marginBottom: 8, fontSize: 9, letterSpacing: 1.2, fontWeight: '800' },
-  remSectionOverdue: { color: '#EF4444' },
-  remSectionUpcoming: { color: '#9CA3AF' },
-  remCard: { minHeight: 74, borderRadius: 14, backgroundColor: '#FFFFFF', marginBottom: 10, paddingHorizontal: 10, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', borderLeftWidth: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 14, elevation: 3 },
-  remCardOverdue: { borderLeftColor: '#EF4444' },
-  remCardUpcoming: { borderLeftColor: '#1A7BC4' },
-  remCheckbox: { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: '#9CA3AF', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  remCheckboxDone: { backgroundColor: '#1A7BC4', borderColor: '#1A7BC4' },
-  remCardBody: { flex: 1 },
-  remCardMeta: { color: '#6B7280', fontSize: 11, marginBottom: 2 },
-  remCardTitle: { color: '#1F2937', fontSize: 14, fontWeight: '700' },
-  remCardDate: { fontSize: 12, marginTop: 2, fontWeight: '600' },
-  remCardDateOverdue: { color: '#EF4444' },
-  remCardDateUpcoming: { color: '#1A7BC4' },
-  remTag: { marginLeft: 10, borderRadius: 999, backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4 },
-  remTagTxt: { color: '#6B7280', fontSize: 10, fontWeight: '700' },
-  remFab: { position: 'absolute', bottom: 80, right: 16, width: 56, height: 56, borderRadius: 28, backgroundColor: '#1A7BC4', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 18, elevation: 6 },
-  remFabTxt: { color: '#FFFFFF', fontSize: 28, lineHeight: 30, fontWeight: '700' },
-  remEmpty: { paddingVertical: 60, alignItems: 'center' },
-  remEmptyTitle: { color: '#1F2937', fontSize: 16, fontWeight: '700' },
-  remEmptySub: { color: '#6B7280', fontSize: 12, marginTop: 6 },
+  remTopHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10, backgroundColor: '#FFF8F5' },
+  remTopTitle: { color: '#261810', fontSize: 18, fontWeight: '800' },
+  remAddBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#E67E22', alignItems: 'center', justifyContent: 'center' },
+  remScrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 130 },
+  remHero: { paddingTop: 4, paddingBottom: 20 },
+  remHeroTitle: { color: '#261810', fontSize: 28, lineHeight: 34, fontWeight: '800' },
+  remHeroSub: { color: '#897365', fontSize: 15, lineHeight: 22, marginTop: 6 },
+  remFilterRow: { flexDirection: 'row', gap: 8, marginBottom: 16, paddingVertical: 4 },
+  remFilterChip: { borderRadius: 999, backgroundColor: '#F5EDE8', paddingHorizontal: 14, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  remFilterChipActive: { backgroundColor: '#E67E22' },
+  remFilterChipTxt: { color: '#897365', fontSize: 13, fontWeight: '600' },
+  remFilterChipTxtActive: { color: '#FFFFFF' },
+  remSectionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, marginBottom: 12 },
+  remSectionTitleRed: { color: '#DC2626', fontSize: 17, fontWeight: '700' },
+  remSectionTitleOrange: { color: '#C27B03', fontSize: 17, fontWeight: '700' },
+  remOverdueBlock: { marginBottom: 24 },
+  remOverdueCards: { gap: 10 },
+  remUpcomingBlock: { marginBottom: 24 },
+  remUpcomingCards: { gap: 10 },
+  // Unified reminder item card (used by both overdue & upcoming)
+  remItemCard: { borderRadius: 16, backgroundColor: '#FFFFFF', padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2, flexDirection: 'row', alignItems: 'center' },
+  remItemCardOverdue: {},
+  remItemCardUpcoming: {},
+  remItemAvatar: { width: 44, height: 44, borderRadius: 22, marginRight: 14 },
+  remItemBody: { flex: 1, minWidth: 0 },
+  remItemBadge: { color: '#DC2626', fontSize: 10, fontWeight: '800', letterSpacing: 0.5, marginBottom: 4 },
+  remItemTitle: { color: '#261810', fontSize: 16, fontWeight: '700' },
+  remItemSub: { color: '#897365', fontSize: 13, marginTop: 2 },
+  remCheckBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginLeft: 8 },
+  remCheckBtnRed: {},
+  remUpcomingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  remDateChip: { borderRadius: 999, backgroundColor: '#DBEAFE', paddingHorizontal: 12, paddingVertical: 4 },
+  remDateChipTxt: { color: '#1D4ED8', fontSize: 12, fontWeight: '700' },
+  remPetThumbs: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+  remThumbAvatar: { width: 24, height: 24, borderRadius: 12 },
+  remThumbCount: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' },
+  remThumbCountTxt: { color: '#B45309', fontSize: 11, fontWeight: '800' },
+  remFab: { position: 'absolute', bottom: 80, right: 20, width: 54, height: 54, borderRadius: 27, backgroundColor: '#E67E22', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 14, elevation: 6 },
+  remFabTxt: { color: '#FFFFFF', fontSize: 26, lineHeight: 28, fontWeight: '700' },
+  remEmpty: { paddingVertical: 48, alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, marginTop: 8 },
+  remEmptyTitle: { color: '#261810', fontSize: 16, fontWeight: '600' },
+  remEmptySub: { color: '#897365', fontSize: 13, marginTop: 6 },
 
   // Add reminder
   addRemWrap: { flexGrow: 1, backgroundColor: '#FFF8F5', paddingBottom: 36 },
