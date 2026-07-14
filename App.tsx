@@ -1431,11 +1431,199 @@ function LabeledInput({
 }
 
 function OtpScreen({ onBack, onVerify }: { onBack: () => void; onVerify: () => void }) {
+  const OTP_LENGTH = 4;
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array.from({ length: OTP_LENGTH }, () => ''));
+  const otpRefs = useRef<Array<TextInput | null>>([]);
+  const lastAutoSubmittedOtpRef = useRef('');
+  const otpAutoComplete = Platform.OS === 'ios' ? 'one-time-code' : 'sms-otp';
+
+  const focusOtpAt = useCallback((index: number) => {
+    otpRefs.current[index]?.focus();
+  }, []);
+
+  const applyDigits = useCallback(
+    (startIndex: number, incoming: string) => {
+      const onlyDigits = incoming.replace(/\D/g, '');
+      if (onlyDigits.length === 0) {
+        return;
+      }
+
+      setOtpDigits(prev => {
+        const next = [...prev];
+        let cursor = startIndex;
+        for (let i = 0; i < onlyDigits.length && cursor < OTP_LENGTH; i += 1) {
+          next[cursor] = onlyDigits[i];
+          cursor += 1;
+        }
+        return next;
+      });
+
+      const nextIndex = Math.min(startIndex + onlyDigits.length, OTP_LENGTH - 1);
+      if (nextIndex < OTP_LENGTH - 1) {
+        focusOtpAt(nextIndex);
+      }
+    },
+    [focusOtpAt],
+  );
+
+  const handleOtpChange = useCallback(
+    (index: number, raw: string) => {
+      if (raw.length === 0) {
+        setOtpDigits(prev => {
+          const next = [...prev];
+          next[index] = '';
+          return next;
+        });
+        return;
+      }
+
+      applyDigits(index, raw);
+      if (raw.length === 1 && index < OTP_LENGTH - 1) {
+        focusOtpAt(index + 1);
+      }
+    },
+    [applyDigits, focusOtpAt],
+  );
+
+  const handleOtpKeyPress = useCallback((index: number, key: string) => {
+    if (key !== 'Backspace') {
+      return;
+    }
+
+    setOtpDigits(prev => {
+      const next = [...prev];
+      if (next[index]) {
+        next[index] = '';
+        return next;
+      }
+
+      if (index > 0) {
+        next[index - 1] = '';
+        focusOtpAt(index - 1);
+      }
+      return next;
+    });
+  }, [focusOtpAt]);
+
+  const handleOtpPress = useCallback(() => {
+    const firstEmpty = otpDigits.findIndex(digit => !digit);
+    focusOtpAt(firstEmpty === -1 ? OTP_LENGTH - 1 : firstEmpty);
+  }, [focusOtpAt, otpDigits]);
+
+  const handleVerify = useCallback(() => {
+    if (otpDigits.some(digit => !digit)) {
+      Alert.alert('Invalid code', 'Please enter all 4 digits before verifying.');
+      return;
+    }
+    onVerify();
+  }, [onVerify, otpDigits]);
+
+  useEffect(() => {
+    const joinedOtp = otpDigits.join('');
+    const isComplete = joinedOtp.length === OTP_LENGTH && !otpDigits.some(digit => !digit);
+    if (!isComplete) {
+      lastAutoSubmittedOtpRef.current = '';
+      return;
+    }
+
+    if (lastAutoSubmittedOtpRef.current === joinedOtp) {
+      return;
+    }
+
+    lastAutoSubmittedOtpRef.current = joinedOtp;
+    onVerify();
+  }, [onVerify, otpDigits]);
+
   return (
     <View style={s.otpWrap}>
-      <View style={s.otpTop}><TouchableOpacity style={s.otpBack} onPress={onBack}><BackIcon width={18} height={18} fill="#261810" /></TouchableOpacity><Text style={s.otpBrand}>Pawos</Text><View style={s.blank} /></View>
-      <View style={s.otpCard}><View style={[s.otpHero, { alignItems: 'center', justifyContent: 'center' }]}><View style={s.otpIconContainer}><VerifyEmailIcon width={42} height={36} /></View></View><Text style={s.otpTitle}>Verify your email</Text><Text style={s.otpSub}>We&apos;ve sent a code to your email. Enter{`\n`}the 4-digit numeric code below to{`\n`}proceed.</Text><View style={s.otpRow}><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /><TextInput style={s.otpInput} maxLength={1} keyboardType="number-pad" /></View><TouchableOpacity style={s.otpVerifyBtn} onPress={onVerify}><Text style={s.otpVerifyTxt}>Verify</Text></TouchableOpacity><Text style={s.otpHint}>Didn&apos;t receive the code?</Text><View style={s.row}><Text style={s.otpResend}>Resend code</Text><View style={s.otpDot} /><Text style={s.otpTime}>0:30s</Text></View></View>
-      <View style={s.secure}><Image source={ASSET.otpLock} style={s.lock} /><Text style={s.secureTxt}>Secure 256-bit encrypted verification</Text></View>
+      <View style={s.otpTop}>
+        <TouchableOpacity style={s.otpBack} onPress={onBack}>
+          <BackIcon width={18} height={18} fill="#261810" />
+        </TouchableOpacity>
+        <Text style={s.otpBrand}>Pawos</Text>
+        <View style={s.blank} />
+      </View>
+      <View style={s.otpCard}>
+        <View style={[s.otpHero, { alignItems: 'center', justifyContent: 'center' }]}>
+          <View style={s.otpIconContainer}>
+            <VerifyEmailIcon width={42} height={36} />
+          </View>
+        </View>
+        <Text style={s.otpTitle}>Verify your email</Text>
+        <Text style={s.otpSub}>
+          We&apos;ve sent a code to your email. Enter{`\n`}
+          the 4-digit numeric code below to{`\n`}
+          proceed.
+        </Text>
+        <TouchableOpacity style={s.otpRow} onPress={handleOtpPress} activeOpacity={1}>
+          <TextInput
+            ref={ref => {
+              otpRefs.current[0] = ref;
+            }}
+            style={s.otpInput}
+            value={otpDigits[0]}
+            maxLength={4}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete={otpAutoComplete}
+            autoFocus
+            onChangeText={text => handleOtpChange(0, text)}
+            onKeyPress={event => handleOtpKeyPress(0, event.nativeEvent.key)}
+          />
+          <TextInput
+            ref={ref => {
+              otpRefs.current[1] = ref;
+            }}
+            style={s.otpInput}
+            value={otpDigits[1]}
+            maxLength={4}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete={otpAutoComplete}
+            onChangeText={text => handleOtpChange(1, text)}
+            onKeyPress={event => handleOtpKeyPress(1, event.nativeEvent.key)}
+          />
+          <TextInput
+            ref={ref => {
+              otpRefs.current[2] = ref;
+            }}
+            style={s.otpInput}
+            value={otpDigits[2]}
+            maxLength={4}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete={otpAutoComplete}
+            onChangeText={text => handleOtpChange(2, text)}
+            onKeyPress={event => handleOtpKeyPress(2, event.nativeEvent.key)}
+          />
+          <TextInput
+            ref={ref => {
+              otpRefs.current[3] = ref;
+            }}
+            style={s.otpInput}
+            value={otpDigits[3]}
+            maxLength={4}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete={otpAutoComplete}
+            onChangeText={text => handleOtpChange(3, text)}
+            onKeyPress={event => handleOtpKeyPress(3, event.nativeEvent.key)}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity style={s.otpVerifyBtn} onPress={handleVerify}>
+          <Text style={s.otpVerifyTxt}>Verify</Text>
+        </TouchableOpacity>
+        <Text style={s.otpHint}>Didn&apos;t receive the code?</Text>
+        <View style={s.row}>
+          <Text style={s.otpResend}>Resend code</Text>
+          <View style={s.otpDot} />
+          <Text style={s.otpTime}>0:30s</Text>
+        </View>
+      </View>
+      <View style={s.secure}>
+        <Image source={ASSET.otpLock} style={s.lock} />
+        <Text style={s.secureTxt}>Secure 256-bit encrypted verification</Text>
+      </View>
     </View>
   );
 }
@@ -1630,7 +1818,7 @@ function HomeScreen({
           <Text style={s.navActiveTxt}>Home</Text>
         </View>
         <TouchableOpacity style={s.navItem} onPress={onRecords}>
-          <View style={s.navIconWrap}><HealthNavIcon color="#644B3C" /></View>
+          <View style={s.navIconWrap}><HealthNavIcon color="#2091E3" /></View>
           <Text style={s.navTxt}>Health</Text>
         </TouchableOpacity>
         <NavItem label="Activity" iconComponent={ActivityNavIcon} onPress={onActivity} />
@@ -1809,7 +1997,7 @@ function ProfileScreen({
           <Text style={s.navTxt}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.navItem} onPress={onRecords}>
-          <View style={s.navIconWrap}><HealthNavIcon color="#644B3C" /></View>
+          <View style={s.navIconWrap}><HealthNavIcon color="#2091E3" /></View>
           <Text style={s.navTxt}>Health</Text>
         </TouchableOpacity>
         <NavItem label="Activity" iconComponent={ActivityNavIcon} onPress={onActivity} />
@@ -1978,6 +2166,7 @@ function PrivacySecurityScreen({
 }) {
   const [biometricLock, setBiometricLock] = useState(false);
   const [twoFactor, setTwoFactor] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [analytics, setAnalytics] = useState(true);
   const [personalizedAds, setPersonalizedAds] = useState(false);
   const [shareWithVet, setShareWithVet] = useState(true);
@@ -2140,10 +2329,28 @@ function PrivacySecurityScreen({
         </View>
 
         {/* ── Danger Zone ── */}
-        <TouchableOpacity style={s.editDeleteBtn} onPress={() => Alert.alert('Delete Account', 'This action cannot be undone. All your pets, records, and reminders will be permanently deleted.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => {} }])}>
+        <TouchableOpacity style={s.editDeleteBtn} onPress={() => setShowDeleteModal(true)}>
           <DeleteAccountIcon width={16} height={16} />
           <Text style={s.editDeleteTxt}>Delete Account</Text>
         </TouchableOpacity>
+
+        {/* ── Delete Account Confirmation Modal ── */}
+        <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>
+          <View style={s.deleteOverlay}>
+            <View style={s.deleteCard}>
+              <Text style={s.deleteTitle}>Delete Account</Text>
+              <Text style={s.deleteMessage}>This action cannot be undone. All your pets, records, and reminders will be permanently deleted.</Text>
+              <View style={s.deleteBtnRow}>
+                <TouchableOpacity style={s.deleteCancelBtn} onPress={() => setShowDeleteModal(false)}>
+                  <Text style={s.deleteCancelTxt}>CANCEL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.deleteConfirmBtn} onPress={() => { setShowDeleteModal(false); }}>
+                  <Text style={s.deleteConfirmTxt}>DELETE</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <TouchableOpacity style={s.logout} onPress={onBack}>
           <LogoutIcon width={18} height={18} />
@@ -2495,7 +2702,7 @@ function ActivityTrackerScreen({
           <Text style={s.navTxt}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.navItem} onPress={onRecords}>
-          <View style={s.navIconWrap}><HealthNavIcon color="#644B3C" /></View>
+          <View style={s.navIconWrap}><HealthNavIcon color="#2091E3" /></View>
           <Text style={s.navTxt}>Health</Text>
         </TouchableOpacity>
         <View style={s.navActive}>
@@ -2521,14 +2728,16 @@ function NavItem({
   onPress,
   badgeCount,
   active,
+  iconColor: iconColorProp,
 }: {
   label: string;
   iconComponent: React.ComponentType<SvgProps>;
   onPress?: () => void;
   badgeCount?: number;
   active?: boolean;
+  iconColor?: string;
 }) {
-  const iconColor = active ? '#E67E22' : '#644B3C';
+  const iconColor = iconColorProp ?? (active ? '#E67E22' : '#644B3C');
   return (
     <TouchableOpacity style={s.navItem} onPress={onPress} disabled={!onPress}>
       <View style={s.navIconWrap}>
@@ -2959,7 +3168,7 @@ function PetProfileScreen({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const [confirming, setConfirming] = useState(false);
+  const [showDeletePetModal, setShowDeletePetModal] = useState(false);
   const age = calculatePetAge(pet.dateOfBirth);
   const accent = petAccentColor(pet.id);
   const photoSource = getPetImageSource(pet);
@@ -3008,31 +3217,35 @@ function PetProfileScreen({
             <Text style={s.petEditBtnTxt}>Edit Pet Details</Text>
           </TouchableOpacity>
 
-          {confirming ? (
-            <View style={s.petConfirmCard}>
-              <View style={s.row}>
-                <AlertIcon width={20} height={20} />
-                <Text style={s.petConfirmTitle}>Delete {pet.name}?</Text>
-              </View>
-              <Text style={s.petConfirmSub}>
-                This permanently removes {pet.name} and all associated health records, reminders, and files.
-              </Text>
-              <View style={s.petConfirmActions}>
-                <TouchableOpacity style={s.petConfirmCancel} onPress={() => setConfirming(false)}>
-                  <Text style={s.petConfirmCancelTxt}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={s.petConfirmDelete} onPress={onDelete}>
-                  <Text style={s.petConfirmDeleteTxt}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity style={s.petDeleteLink} onPress={() => setConfirming(true)}>
-              <Text style={s.petDeleteLinkTxt}>Delete Pet Profile</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={s.petDeleteLink} onPress={() => setShowDeletePetModal(true)}>
+            <Text style={s.petDeleteLinkTxt}>Delete Pet Profile</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* ── Delete Pet Profile Confirmation Modal ── */}
+      <Modal visible={showDeletePetModal} transparent animationType="fade" onRequestClose={() => setShowDeletePetModal(false)}>
+        <View style={s.deletePetOverlay}>
+          <View style={s.deletePetCard}>
+            {/* Trash icon in red-tinted circle */}
+            <View style={s.deletePetIconCircle}>
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="#BA1A1A" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+            <Text style={s.deletePetTitle}>Delete {pet.name}'s{'\n'}Profile</Text>
+            <Text style={s.deletePetMessage}>
+              Deleting {pet.name}&apos;s profile will also remove all health records and attachments. This action cannot be undone.
+            </Text>
+            <TouchableOpacity style={s.deletePetConfirmBtn} onPress={() => { setShowDeletePetModal(false); onDelete(); }}>
+              <Text style={s.deletePetConfirmBtnTxt}>Delete Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.deletePetKeepBtn} onPress={() => setShowDeletePetModal(false)}>
+              <Text style={s.deletePetKeepBtnTxt}>Keep Profile</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -3746,7 +3959,7 @@ function RemindersScreen({
           <View style={s.navIconWrap}><HomeNavIcon color="#644B3C" /></View>
           <Text style={s.navTxt}>Home</Text>
         </TouchableOpacity>
-        <NavItem label="Health" iconComponent={HealthNavIcon} onPress={onHealth} />
+        <NavItem label="Health" iconComponent={HealthNavIcon} onPress={onHealth} iconColor="#2091E3" />
         <NavItem label="Activity" iconComponent={ActivityNavIcon} onPress={onActivity} />
         <View style={s.navActive}>
           <View style={s.navIconWrap}>
@@ -4826,6 +5039,16 @@ const s = StyleSheet.create({
   editSectionLbl: { color: '#564337', fontSize: 14, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 16 },
   editDeleteBtn: { marginTop: 24, marginHorizontal: 20, height: 56, borderRadius: 16, borderWidth: 2, borderColor: '#F4D7D7', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   editDeleteTxt: { color: '#BA1A1A', fontSize: 16, fontWeight: '600' },
+  // Delete Account Confirmation Modal
+  deleteOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
+  deleteCard: { width: 300, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 28, paddingHorizontal: 24, alignItems: 'center' },
+  deleteTitle: { fontSize: 18, fontWeight: '700', color: '#1C1917', marginBottom: 10, textAlign: 'center' },
+  deleteMessage: { fontSize: 14, color: '#57534E', lineHeight: 20, textAlign: 'center', marginBottom: 24, paddingHorizontal: 4 },
+  deleteBtnRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  deleteCancelBtn: { paddingVertical: 10, paddingHorizontal: 22, borderRadius: 8, backgroundColor: 'transparent' },
+  deleteCancelTxt: { fontSize: 13, fontWeight: '600', color: '#16A34A', letterSpacing: 0.5 },
+  deleteConfirmBtn: { paddingVertical: 10, paddingHorizontal: 22, borderRadius: 8, backgroundColor: 'transparent' },
+  deleteConfirmTxt: { fontSize: 13, fontWeight: '600', color: '#16A34A', letterSpacing: 0.5 },
   privacyContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 130, gap: 20 },
   privacyFooter: { color: '#B09080', fontSize: 11, textAlign: 'center', lineHeight: 18, marginTop: 16, marginBottom: 24 },
 
@@ -4902,15 +5125,16 @@ const s = StyleSheet.create({
   petDeleteLink: { alignSelf: 'center', marginTop: 8, padding: 12 },
   petDeleteLinkTxt: { color: '#BA1A1A', fontSize: 14, fontWeight: '600' },
 
-  // Delete confirmation (PET-003)
-  petConfirmCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, marginTop: 20, borderWidth: 1, borderColor: '#F4D7D7' },
-  petConfirmTitle: { color: '#BA1A1A', fontSize: 18, fontWeight: '700', marginLeft: 10 },
-  petConfirmSub: { color: '#564337', fontSize: 13, lineHeight: 20, marginTop: 8, marginBottom: 16 },
-  petConfirmActions: { flexDirection: 'row', gap: 12 },
-  petConfirmCancel: { flex: 1, height: 48, borderRadius: 999, borderWidth: 2, borderColor: '#DCC1B1', alignItems: 'center', justifyContent: 'center' },
-  petConfirmCancelTxt: { color: '#944A00', fontSize: 14, fontWeight: '700' },
-  petConfirmDelete: { flex: 1, height: 48, borderRadius: 999, backgroundColor: '#BA1A1A', alignItems: 'center', justifyContent: 'center' },
-  petConfirmDeleteTxt: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  // Delete Pet Profile Modal (PET-003) — centered popup
+  deletePetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.40)', alignItems: 'center', justifyContent: 'center' },
+  deletePetCard: { width: 310, backgroundColor: '#FFFFFF', borderRadius: 24, paddingVertical: 32, paddingHorizontal: 28, alignItems: 'center' },
+  deletePetIconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  deletePetTitle: { fontSize: 20, fontWeight: '800', color: '#1C1917', textAlign: 'center', lineHeight: 26, marginBottom: 8 },
+  deletePetMessage: { fontSize: 13, color: '#78716C', lineHeight: 20, textAlign: 'center', paddingHorizontal: 2, marginBottom: 24 },
+  deletePetConfirmBtn: { width: '100%', height: 50, borderRadius: 999, backgroundColor: '#B91C1C', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  deletePetConfirmBtnTxt: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  deletePetKeepBtn: { width: '100%', height: 48, borderRadius: 999, backgroundColor: '#FFF7ED', alignItems: 'center', justifyContent: 'center' },
+  deletePetKeepBtnTxt: { fontSize: 15, fontWeight: '600', color: '#9A3412' },
 
   // Records screen (REC-006)
   recWrap: { flex: 1, backgroundColor: '#FFF8F5' },
